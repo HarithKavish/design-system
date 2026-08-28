@@ -40,6 +40,12 @@
   /* Page field: a single radial wash of --bg-accent over --bg, nothing more */
   --page-background: radial-gradient(circle at top, var(--bg-accent), transparent 42%), var(--bg);
   --grid-line: rgba(128, 128, 128, 0.03);
+
+  /* Laid over imagery the system does not control — a user-supplied
+     background, a lightbox — so text and cards stay readable on top.
+     The page field at 62%, so a scrim reads as the page dimming rather
+     than as a grey wash. */
+  --scrim: rgba(244, 249, 251, 0.62);
 }
 
 :root[data-theme='dark'] {
@@ -57,4 +63,5 @@
   --pill-bg: rgba(206, 223, 230, 0.08);
   --header-bg: rgba(11, 16, 20, 0.86);
   --footer-bg: rgba(11, 16, 20, 0.92);
+  --scrim: rgba(11, 16, 20, 0.62);
 }
