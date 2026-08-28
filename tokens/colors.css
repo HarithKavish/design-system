@@ -46,6 +46,10 @@
      The page field at 62%, so a scrim reads as the page dimming rather
      than as a grey wash. */
   --scrim: rgba(244, 249, 251, 0.62);
+
+  /* The overlay scrollbar thumb. Ink, not accent: it is furniture. */
+  --scrollbar-thumb: rgba(24, 32, 40, 0.28);
+  --scrollbar-thumb-hover: rgba(24, 32, 40, 0.46);
 }
 
 :root[data-theme='dark'] {
@@ -64,4 +68,6 @@
   --header-bg: rgba(11, 16, 20, 0.86);
   --footer-bg: rgba(11, 16, 20, 0.92);
   --scrim: rgba(11, 16, 20, 0.62);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.26);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.44);
 }

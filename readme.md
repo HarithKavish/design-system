@@ -380,6 +380,22 @@ example, and its variants. Each directory has one `@dsCard` HTML showing every s
 
 ### Intentional additions
 
+**Overlay scrollbar.** A native scrollbar reserves layout width on Windows and
+Linux, so a page that scrolls renders a few pixels narrower than one that does
+not and content shifts between them. `harith-shell.js` replaces it with a thumb
+drawn over the page — the layout is always the full viewport — which fades out
+about a second after scrolling stops and is draggable. It is skipped where the
+platform already overlays (touch, macOS), so a working native bar is never
+replaced, and the CSS only applies once the script has added
+`.has-overlay-scrollbar`, so a page loading the stylesheets alone keeps its
+native bar rather than losing scrollbars entirely.
+
+**`harith-header` and `harith-footer` are `display: contents`.** They are
+wrappers, not boxes. Without it they default to `display: inline`, which makes
+`<harith-header>` the containing block for the sticky `.site-header` inside it —
+the header could only travel within its own height, so it never actually stuck
+to the top while scrolling.
+
 `--scrim` — the page field at 62%, in both themes. `search` had defined it
 locally for the panel it lays over a user-supplied background, and any lightbox
 or dialog elsewhere needs the same value. A scrim reads as the page dimming, not

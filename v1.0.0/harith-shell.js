@@ -54,6 +54,14 @@
         } catch (e) { return null; }
     }
 
+    function onReady(fn) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fn, { once: true });
+        } else {
+            fn();
+        }
+    }
+
     class HarithHeader extends HTMLElement {
         static get observedAttributes() {
             return ['site-title', 'site-tagline', 'google-client-id', 'nav-links',
@@ -61,15 +69,15 @@
         }
 
         connectedCallback() {
-            /* Anything authored inside <harith-header> is a surface-specific
-               header action — a settings menu, an extra control. Keep the real
-               nodes, not their markup, so the page's own listeners survive a
-               re-render. Captured once: render() empties this element. */
-            if (!this._actions) {
-                this._actions = document.createDocumentFragment();
-                while (this.firstChild) this._actions.appendChild(this.firstChild);
-            }
             this.render();
+            /* The parser sets attributes and inserts this element BEFORE it
+               parses the children, so authored content arrives after the first
+               render. Collect it once the document is parsed. */
+            if (!this._parseHook && document.readyState === 'loading') {
+                this._parseHook = true;
+                document.addEventListener('DOMContentLoaded',
+                    () => this.adoptAuthored(), { once: true });
+            }
             // Attributes are parsed by now, but GSI may not have loaded yet.
             setTimeout(() => {
                 this.initThemeToggle();
@@ -80,6 +88,11 @@
 
         attributeChangedCallback(name, oldValue, newValue) {
             if (oldValue === newValue) return;
+            /* Fires once per attribute while parsing, before connectedCallback.
+               Rendering then would publish a header the first real render has
+               to replace, and the parser would append the page's own children
+               after it. Let connectedCallback do the first render. */
+            if (!this._rendered) return;
             this.render();
             this.initThemeToggle();
             this.initNavToggle();
@@ -127,6 +140,18 @@
                 ? '<div class="google-button-wrapper" id="googleSignInButton" aria-label="Sign in with Google"></div>'
                 : '';
 
+            /* Hold anything the page authored — whatever is not the header we
+               rendered last time — so the innerHTML swap below cannot destroy
+               it. Real nodes are moved, so listeners the page attached live on. */
+            this._authored = this._authored || document.createDocumentFragment();
+            const heldSlot = this.querySelector('.site-header__slot');
+            if (heldSlot) {
+                while (heldSlot.firstChild) this._authored.appendChild(heldSlot.firstChild);
+            }
+            Array.prototype.slice.call(this.childNodes).forEach(node => {
+                if (node !== this._headerEl) this._authored.appendChild(node);
+            });
+
             // Light DOM, so the page's global CSS styles these nodes.
             this.innerHTML =
                 '<header class="site-header">' +
@@ -157,12 +182,9 @@
                         : '') +
                 '</header>';
 
-            /* Move the authored nodes back in. They are held in a fragment, so
-               appending relocates them rather than copying. */
-            if (this._actions && this._actions.childNodes.length) {
-                const slot = this.querySelector('.site-header__slot');
-                if (slot) slot.appendChild(this._actions);
-            }
+            this._rendered = true;
+            this._headerEl = this.firstElementChild;
+            this.adoptAuthored();
 
             this.querySelectorAll('[data-action]').forEach(btn => {
                 btn.addEventListener('click', e => {
@@ -171,6 +193,19 @@
                         bubbles: true
                     }));
                 });
+            });
+        }
+
+        /* Move page-authored nodes into the header's actions slot. Safe to call
+           repeatedly: our own rendered header is excluded by identity. */
+        adoptAuthored() {
+            const slot = this.querySelector('.site-header__slot');
+            if (!slot) return;
+            if (this._authored && this._authored.childNodes.length) {
+                slot.appendChild(this._authored);
+            }
+            Array.prototype.slice.call(this.childNodes).forEach(node => {
+                if (node !== this._headerEl) slot.appendChild(node);
             });
         }
 
@@ -323,6 +358,103 @@
                 '</footer>';
         }
     }
+
+    /* ── Overlay scrollbar ──────────────────────────────────────────────
+       Native scrollbars take layout width on Windows and Linux, so a page that
+       scrolls renders a few pixels narrower than one that does not. This draws
+       the bar over the page instead, so the layout is always the full viewport,
+       and fades the thumb out shortly after scrolling stops.
+
+       Skipped where the platform already overlays its scrollbars (touch, and
+       macOS unless the user has forced them always-on), so we never replace a
+       working native bar with our own. */
+    function initOverlayScrollbar() {
+        const root = document.documentElement;
+        if (root.classList.contains('has-overlay-scrollbar')) return;
+
+        const probe = document.createElement('div');
+        probe.style.cssText = 'position:absolute;visibility:hidden;overflow:scroll;width:100px;height:100px';
+        document.body.appendChild(probe);
+        const reservesSpace = probe.offsetWidth - probe.clientWidth > 0;
+        probe.remove();
+        if (!reservesSpace) return;
+
+        root.classList.add('has-overlay-scrollbar');
+
+        const bar = document.createElement('div');
+        bar.className = 'overlay-scrollbar';
+        const thumb = document.createElement('span');
+        thumb.className = 'overlay-scrollbar__thumb';
+        bar.appendChild(thumb);
+        document.body.appendChild(bar);
+
+        const MIN = 36;
+        let hideTimer = null;
+        let dragging = false;
+
+        function metrics() {
+            const total = root.scrollHeight;
+            const view = root.clientHeight;
+            return { total, view, scrollable: total - view > 1 };
+        }
+
+        function draw() {
+            const { total, view, scrollable } = metrics();
+            if (!scrollable) { bar.classList.remove('is-visible'); return; }
+            const height = Math.max(view * (view / total), MIN);
+            const offset = (root.scrollTop / (total - view)) * (view - height);
+            thumb.style.height = height + 'px';
+            thumb.style.transform = 'translateY(' + offset + 'px)';
+        }
+
+        function reveal() {
+            draw();
+            if (!metrics().scrollable) return;
+            bar.classList.add('is-visible');
+            clearTimeout(hideTimer);
+            hideTimer = setTimeout(() => {
+                if (!dragging) bar.classList.remove('is-visible');
+            }, 900);
+        }
+
+        addEventListener('scroll', reveal, { passive: true });
+        addEventListener('resize', reveal);
+        bar.addEventListener('mouseenter', reveal);
+
+        thumb.addEventListener('pointerdown', event => {
+            const { total, view } = metrics();
+            const height = Math.max(view * (view / total), MIN);
+            const startY = event.clientY;
+            const startTop = root.scrollTop;
+            dragging = true;
+            bar.classList.add('is-dragging');
+            thumb.setPointerCapture(event.pointerId);
+            event.preventDefault();
+
+            function move(e) {
+                const travel = view - height;
+                if (travel <= 0) return;
+                root.scrollTop = startTop + ((e.clientY - startY) / travel) * (total - view);
+            }
+            function up() {
+                dragging = false;
+                bar.classList.remove('is-dragging');
+                thumb.removeEventListener('pointermove', move);
+                thumb.removeEventListener('pointerup', up);
+                reveal();
+            }
+            thumb.addEventListener('pointermove', move);
+            thumb.addEventListener('pointerup', up);
+        });
+
+        /* Content can grow after load — a catalog rendering, an article opening. */
+        if (window.ResizeObserver) {
+            new ResizeObserver(draw).observe(document.body);
+        }
+        reveal();
+    }
+
+    onReady(initOverlayScrollbar);
 
     if (!customElements.get('harith-header')) customElements.define('harith-header', HarithHeader);
     if (!customElements.get('harith-footer')) customElements.define('harith-footer', HarithFooter);
