@@ -368,6 +368,11 @@ example, and its variants. Each directory has one `@dsCard` HTML showing every s
 
 ### Intentional additions
 
+`--scrim` — the page field at 62%, in both themes. `search` had defined it
+locally for the panel it lays over a user-supplied background, and any lightbox
+or dialog elsewhere needs the same value. A scrim reads as the page dimming, not
+as a grey wash, which is why it is derived from `--bg` rather than from black.
+
 `code`, `kbd`, `samp` and `pre` are styled in `base.css`. `--font-mono` was
 defined from the start with nothing consuming it, so every surface needing to
 show an endpoint or a command invented its own treatment — `api` had hard-coded
