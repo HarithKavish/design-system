@@ -212,6 +212,13 @@
   --status-progress-bg: rgba(124, 92, 47, 0.09);
   --status-progress-border: rgba(124, 92, 47, 0.18);
 
+  /* Destructive actions and failures. The same hue as --dot-offline, which was
+     already the ecosystem's "something is wrong" colour, given the fg/bg/border
+     shape the other statuses use. */
+  --status-danger-fg: #b4553f;
+  --status-danger-bg: rgba(180, 85, 63, 0.10);
+  --status-danger-border: rgba(180, 85, 63, 0.20);
+
   --status-neutral-fg: var(--accent);
   --status-neutral-bg: var(--pill-bg);
   --status-neutral-border: var(--border);
@@ -224,6 +231,7 @@
 :root[data-theme='dark'] {
   --status-live-fg: #92d3b0;
   --status-progress-fg: #d9be8a;
+  --status-danger-fg: #e8a08c;
 }
 
 :root {
@@ -379,4 +387,5 @@
 :root.dark-mode, body.dark-mode {
   --status-live-fg: #92d3b0;
   --status-progress-fg: #d9be8a;
+  --status-danger-fg: #e8a08c;
 }

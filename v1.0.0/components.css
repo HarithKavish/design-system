@@ -173,6 +173,7 @@ harith-header, harith-footer { display: contents; }
 .pill--neutral { background: var(--status-neutral-bg); color: var(--status-neutral-fg); border-color: var(--status-neutral-border); }
 .pill--live { background: var(--status-live-bg); color: var(--status-live-fg); border-color: var(--status-live-border); }
 .pill--progress, .pill--planned { background: var(--status-progress-bg); color: var(--status-progress-fg); border-color: var(--status-progress-border); }
+.pill--danger { background: var(--status-danger-bg); color: var(--status-danger-fg); border-color: var(--status-danger-border); }
 .pill--handle { text-transform: none; letter-spacing: 0.01em; font-weight: var(--font-weight-semibold); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .note-panel { display: grid; gap: var(--space-sm); }
