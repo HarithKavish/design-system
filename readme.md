@@ -312,6 +312,7 @@ page's own CSS styles them and no shadow boundary gets in the way.
 | `brand-mark` | — | Logo image beside the name; omitted when unset |
 | `nav-links` | `[]` | JSON array of `{label, href}` or `{label, action}` |
 | `google-client-id` | — | Renders the Google sign-in slot |
+| `reading-progress` | — | Present: renders the progress bar the page drives via `[data-progress]` |
 
 Anything authored **inside** `<harith-header>` is treated as a surface-specific
 header action and is moved into `.site-header__actions`, before the theme
