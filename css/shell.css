@@ -2,6 +2,13 @@
    Lifted from harithkavish.com/style.css. */
 .site-shell { min-height: 100vh; display: flex; flex-direction: column; }
 
+/* The shell elements are wrappers, not boxes. Without this they default to
+   display:inline, which makes <harith-header> the containing block for the
+   sticky .site-header inside it — so the header could only travel within its
+   own height and never actually stuck. display:contents puts .site-header back
+   in the page flow, where sticky has the whole document to work against. */
+harith-header, harith-footer { display: contents; }
+
 .site-header {
   position: sticky; top: 0; z-index: var(--z-header);
   border-bottom: var(--border-hairline) solid var(--border);

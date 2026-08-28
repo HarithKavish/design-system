@@ -79,6 +79,52 @@ pre code {
   font-size: 1em;
 }
 
+/* Overlay scrollbar. A native bar reserves layout width on Windows and Linux,
+   so a page that scrolls is a few pixels narrower than one that does not, and
+   content shifts as you move between them. The shell replaces it with a thumb
+   drawn over the page: the layout is always the full viewport, and the thumb
+   fades out when scrolling stops.
+
+   Applied only once the shell script has added the class, so a page loading the
+   CSS alone keeps its native scrollbar rather than losing scrollbars entirely. */
+.has-overlay-scrollbar { scrollbar-width: none; }
+.has-overlay-scrollbar::-webkit-scrollbar { width: 0; height: 0; }
+
+.overlay-scrollbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 12px;
+  height: 100%;
+  z-index: var(--z-modal);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration) var(--easing);
+}
+
+.overlay-scrollbar.is-visible,
+.overlay-scrollbar.is-dragging { opacity: 1; }
+
+.overlay-scrollbar__thumb {
+  position: absolute;
+  top: 0;
+  right: 3px;
+  width: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--scrollbar-thumb);
+  pointer-events: auto;
+  cursor: grab;
+  transition: background var(--duration) var(--easing), width var(--duration) var(--easing);
+}
+
+.overlay-scrollbar__thumb:hover,
+.overlay-scrollbar.is-dragging .overlay-scrollbar__thumb {
+  background: var(--scrollbar-thumb-hover);
+  width: 8px;
+}
+
+.overlay-scrollbar.is-dragging .overlay-scrollbar__thumb { cursor: grabbing; }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   * { transition-duration: 1ms !important; animation-duration: 1ms !important; }
