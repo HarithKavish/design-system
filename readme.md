@@ -262,6 +262,36 @@ this system leaves type.
 | `thumbnail.html` | Homepage tile |
 | `logo.png`, `favicon.svg` | Real brand assets, copied from `harithkavish.github.io` |
 
+## `compat/` and `v1.0.0/` — the retired distribution
+
+`HarithKavish/harith-design-system` published seven asset files and is now
+retired. Its consumers are served from this repository instead, at the same
+filenames, from GitHub Pages:
+
+`https://harithkavish.com/design-system/v1.0.0/{tokens,base,components,utils}.css`
+and `.../{theme-toggle,harith-shell,widget-loader}.js`
+
+`v1.0.0/` is **generated — do not edit it by hand.** Run `bash compat/build.sh`
+after changing any token, `css/` file or `compat/` source.
+
+| File | What it is |
+| --- | --- |
+| `compat/build.sh` | Assembles `v1.0.0/` from the canonical sources |
+| `compat/legacy-vars.css` | Redefines all 95 v1.0.0 custom properties in terms of current tokens |
+| `compat/legacy-shell.css` | Aliases the old `.shared-*` shell classes onto current `.site-*` styling; adds the Google button and dropdown |
+| `compat/legacy-utils.css` | The v1.0.0 utilities, unchanged — they reference only legacy names, which the shim supplies |
+| `compat/js/*.js` | The shell web components and theme toggle |
+
+Two deliberate behavioural changes from v1.0.0:
+
+- The header is `position: sticky`, not `position: fixed`, so it occupies flow.
+  Consumers that padded the body to clear the old fixed header must drop it.
+- `theme-toggle.js` sets `data-theme` **and** the legacy `.dark-mode` class, so
+  this system's tokens and consumers' own `.dark-mode` rules both work. It also
+  owns the toggle click through one delegated listener; in v1.0.0 both scripts
+  bound the same button, so every click toggled twice and dark mode never
+  engaged.
+
 ## `tokens/`
 
 `fonts.css` · `colors.css` · `status.css` · `typography.css` · `spacing.css` · `radius.css` ·

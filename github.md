@@ -1,9 +1,9 @@
-repo: HarithKavish/harith-design-system
+repo: HarithKavish/design-system
 branch: main
 
 ## Last sync
 
-date: 2026-08-27T20:35:00Z
+date: 2026-08-28T00:00:00Z
 
 ### Updated in this project
 
@@ -11,13 +11,24 @@ date: 2026-08-27T20:35:00Z
 - Rebuilt 35 components as React primitives across shell, core, reading and messaging.
 - Added UI kits for the public website, the blog, and Converse.
 - Recorded the glassmorphism-to-calm migration in readme.md under "Resolved inconsistencies".
+- Published this system to HarithKavish/design-system and retired
+  harith-design-system, which now holds only a pointer README.
+- Added compat/ and the generated v1.0.0/ distribution, so the seven asset
+  files the retired repo served are published from here, rebuilt on the
+  current tokens.
+- Repointed ai-lab and converse at the new URLs and verified both render in
+  light and dark; dropped converse's 80px body padding, which had reserved
+  space for the old position:fixed header.
 
 ## Also read from
 
 - HarithKavish/harithkavish.github.io (main) — style.css, site.js, site-data.js, index.html, logo.png, favicon.svg
 - HarithKavish/blog (main) — assets/blog.css, index.html
 - HarithKavish/converse (main) — index.html, styles.css, README.md
-- HarithKavish/design-system (main) — empty repository (no commits); the published system lives in harith-design-system
+- HarithKavish/harith-design-system (main) — retired; its v1.0.0 assets are
+  reproduced from compat/ and remain in that repository's git history
+- HarithKavish/ai-lab (main), HarithKavish/converse (main) — index.html,
+  styles.css; both consume the v1.0.0 distribution published from here
 
 ## Screen map
 
