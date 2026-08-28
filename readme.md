@@ -313,6 +313,17 @@ page's own CSS styles them and no shadow boundary gets in the way.
 | `nav-links` | `[]` | JSON array of `{label, href}` or `{label, action}` |
 | `google-client-id` | — | Renders the Google sign-in slot |
 
+Anything authored **inside** `<harith-header>` is treated as a surface-specific
+header action and is moved into `.site-header__actions`, before the theme
+toggle. The real nodes are relocated rather than re-serialised, so listeners the
+page attached to them survive a re-render:
+
+```html
+<harith-header site-title="Search">
+    <div class="settings"><button id="settings-toggle">⚙</button></div>
+</harith-header>
+```
+
 An entry with `action` instead of `href` renders a button and dispatches a
 bubbling `harith-shell-action` event carrying that action.
 
