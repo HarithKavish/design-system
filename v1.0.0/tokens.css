@@ -389,3 +389,34 @@
   --status-progress-fg: #d9be8a;
   --status-danger-fg: #e8a08c;
 }
+/* OS preference — applies unless the page has explicitly chosen light. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #0b1014;
+    --bg-accent: #11181d;
+    --surface: rgba(17, 24, 29, 0.86);
+    --surface-strong: #121a1f;
+    --surface-soft: rgba(24, 33, 39, 0.72);
+    --text: #eef2f4;
+    --muted: #a4afb6;
+    --border: rgba(255, 255, 255, 0.11);
+    --accent: #cedfe6;
+    --accent-strong: #f3f8fa;
+    --pill-bg: rgba(206, 223, 230, 0.08);
+    --header-bg: rgba(11, 16, 20, 0.86);
+    --footer-bg: rgba(11, 16, 20, 0.92);
+    --scrim: rgba(11, 16, 20, 0.62);
+    --scrollbar-thumb: rgba(255, 255, 255, 0.26);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.44);
+  }
+  :root:not([data-theme='light']) {
+    --shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+    --shadow-strong: 0 16px 36px rgba(0, 0, 0, 0.28);
+  }
+  :root:not([data-theme='light']) {
+    --status-live-fg: #92d3b0;
+    --status-progress-fg: #d9be8a;
+    --status-danger-fg: #e8a08c;
+  }
+}
