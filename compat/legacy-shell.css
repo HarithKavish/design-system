@@ -1,0 +1,96 @@
+/* Legacy shell shim — Harith Design System v1.0.0 compatibility.
+
+   v1.0.0's harith-shell.js emitted .shared-* class names. The current system
+   calls the same parts .site-header / .brand / .site-nav / .site-footer. The
+   shipped harith-shell.js now emits the current names; these aliases exist so
+   a cached copy of the old script, or hand-written markup still using the old
+   names, renders identically instead of unstyled. */
+
+.shared-header {
+  position: sticky; top: 0; z-index: var(--z-header);
+  border-bottom: var(--border-hairline) solid var(--border);
+  background: var(--header-bg);
+  backdrop-filter: var(--blur-chrome); -webkit-backdrop-filter: var(--blur-chrome);
+}
+.shared-header__inner, .shared-footer__inner { width: var(--container); margin: 0 auto; }
+.shared-header__inner {
+  position: relative; display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-md); padding: var(--header-padding-block) 0;
+}
+.shared-header__actions { display: inline-flex; align-items: center; gap: 0.6rem; min-width: 0; flex: none; }
+.shared-brand { display: inline-flex; align-items: center; gap: 0.8rem; min-width: 0; }
+.shared-brand__name {
+  font-size: 0.98rem; font-weight: var(--font-weight-heading);
+  letter-spacing: var(--tracking-normal);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.shared-nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2xs); }
+.shared-nav-link {
+  display: inline-flex; align-items: center; padding: 0.44rem 0.72rem;
+  border: var(--border-hairline) solid transparent; border-radius: var(--radius-pill);
+  background: none; color: var(--muted); font: inherit; font-size: 0.92rem;
+  white-space: nowrap; cursor: pointer;
+}
+.shared-nav-link:hover, .shared-nav-link.is-active {
+  color: var(--text); background: var(--surface-soft); border-color: var(--border);
+}
+.shared-footer {
+  border-top: var(--border-hairline) solid var(--border); background: var(--footer-bg);
+  backdrop-filter: var(--blur-chrome-footer); -webkit-backdrop-filter: var(--blur-chrome-footer);
+}
+.shared-footer__inner {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: var(--space-md); padding: 1.2rem 0 var(--space-xl);
+}
+.shared-footer__copy { margin: 0; color: var(--muted); font-size: 0.92rem; }
+.shared-footer__links { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2xs); }
+.shared-footer__links a { color: var(--muted); font-size: 0.92rem; }
+.shared-footer__links a:hover { color: var(--text); }
+
+@media (max-width: 760px) {
+  .shared-nav { justify-content: flex-start; }
+}
+
+/* --- Shell extras the system's CSS does not cover ---------------------- */
+
+/* Google Identity button slot. GSI renders its own iframe/button inside; we
+   only reserve the box and keep the dropdown anchored to it. */
+.google-button-wrapper { position: relative; display: inline-flex; align-items: center; flex: none; }
+
+.signed-in-button {
+  display: inline-flex; padding: 2px; border-radius: var(--radius-pill);
+  border: 2px solid transparent; background: none; cursor: pointer;
+  transition: var(--transition-interactive);
+}
+.signed-in-button:hover { border-color: var(--border); }
+.signed-in-button.active { border-color: var(--accent); }
+.signed-in-button__avatar {
+  width: 36px; height: 36px; border-radius: var(--radius-pill); object-fit: cover; display: block;
+}
+
+.user-dropdown-menu {
+  position: absolute; top: 100%; right: 0; margin-top: var(--space-xs);
+  width: 200px; display: none; overflow: hidden; text-align: left;
+  background: var(--surface-strong);
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-strong);
+  z-index: var(--z-dropdown);
+}
+.user-dropdown-menu.show { display: block; }
+.user-dropdown-header {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: var(--border-hairline) solid var(--border);
+  font-weight: var(--font-weight-semibold); color: var(--text);
+}
+.user-dropdown-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.user-dropdown-action {
+  display: flex; align-items: center; width: 100%; padding: var(--space-sm) var(--space-md);
+  background: none; border: none; cursor: pointer;
+  font: inherit; font-size: var(--font-size-base); color: var(--muted);
+  transition: var(--transition-interactive);
+}
+.user-dropdown-action:hover { background: var(--surface-soft); color: var(--text); }
+
+/* .subtitle — the single v1.0.0 component class consumed directly by a site */
+.subtitle { margin: 0; color: var(--muted); font-size: var(--font-size-base); }

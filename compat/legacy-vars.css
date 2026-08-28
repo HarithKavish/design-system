@@ -1,0 +1,117 @@
+/* Legacy variable shim — Harith Design System v1.0.0 compatibility.
+
+   The v1.0.0 distribution published 95 custom properties; the current system
+   defines a different 116. Consumers still loading /v1.0.0/*.css expect the
+   old names, so every one of them is redefined here in terms of a current
+   token. Nothing here holds a raw value unless the current system has no
+   equivalent (brand literals, fixed pixel sizes).
+
+   Dark mode needs no counterpart block: each alias points at a token that
+   already swaps under :root[data-theme='dark'], so the *-dark aliases
+   resolve to the same swapped value as their light twins. */
+:root {
+  /* Shell */
+  --shell-bg: var(--page-background);
+  --shell-bg-light: var(--page-background);
+  --shell-bg-dark: var(--page-background);
+  --shell-text: var(--text);
+  --shell-text-light: var(--text);
+  --shell-text-dark: var(--text);
+  --shell-header-bg: var(--header-bg);
+  --shell-header-bg-light: var(--header-bg);
+  --shell-header-bg-dark: var(--header-bg);
+  --shell-footer-bg: var(--footer-bg);
+  --shell-footer-bg-light: var(--footer-bg);
+  --shell-footer-bg-dark: var(--footer-bg);
+  --shell-nav-link-color: var(--muted);
+  --shell-nav-link-color-dark: var(--muted);
+  --shell-border: var(--border-hairline) solid var(--border);
+  --shell-border-dark: var(--border-hairline) solid var(--border);
+
+  /* Buttons — the old button tokens now describe the .theme-toggle control */
+  --btn-radius: var(--radius-pill);
+  --btn-padding: 0.58rem 0.9rem;
+  --btn-icon-margin: var(--space-2xs);
+  --btn-bg: var(--surface);
+  --btn-color: var(--text);
+  --btn-border: var(--border-hairline) solid var(--border);
+  --btn-hover-bg: var(--surface-soft);
+  --btn-hover-color: var(--text);
+  --btn-hover-border: var(--border);
+  --btn-hover-shadow: var(--shadow-strong);
+  --btn-dark-bg: var(--surface);
+  --btn-dark-color: var(--text);
+  --btn-dark-border: var(--border-hairline) solid var(--border);
+  --btn-dark-hover-bg: var(--surface-soft);
+  --btn-dark-hover-color: var(--text);
+
+  /* Layout */
+  --main-horizontal-padding: var(--space-md);
+  --header-height: 4.5rem;
+  --footer-height: 4.5rem;
+
+  /* Spacing — the old scale mapped onto the new one; values are identical */
+  --spacing-xs: var(--space-3xs);
+  --spacing-sm: var(--space-xs);
+  --spacing-md: var(--space-md);
+  --spacing-lg: var(--space-xl);
+  --spacing-xl: var(--space-2xl);
+  --spacing-2xl: var(--space-3xl);
+
+  /* Type */
+  --font-family: var(--font-body);
+  --font: var(--font-body);
+  --font-size-3xl: var(--font-size-section-title);
+  --font-weight-bold: var(--font-weight-heading);
+  --line-height-normal: var(--line-height-body);
+  --line-height-relaxed: var(--line-height-prose);
+
+  /* Colour */
+  --color-primary: var(--accent);
+  --color-primary-dark: var(--accent);
+  --color-discord: #5865f2; /* brand literal, no system equivalent */
+  --color-success: var(--dot-online);
+  --color-error: var(--dot-offline);
+  --color-warning: var(--status-progress-fg);
+  --color-info: var(--accent);
+  --color-text-primary: var(--text);
+  --color-text-primary-dark: var(--text);
+  --color-text-secondary: var(--muted);
+  --color-text-secondary-dark: var(--muted);
+  --color-text-tertiary: var(--muted);
+  --color-text-tertiary-dark: var(--muted);
+  --danger: var(--dot-offline);
+  --panel: var(--surface-strong);
+  --panel-2: var(--surface-soft);
+
+  /* Elevation — four old steps collapse onto the system's two */
+  --shadow-sm: var(--shadow);
+  --shadow-md: var(--shadow);
+  --shadow-lg: var(--shadow-strong);
+  --shadow-xl: var(--shadow-strong);
+  --shadow-dark-sm: var(--shadow);
+  --shadow-dark-md: var(--shadow);
+  --shadow-dark-lg: var(--shadow-strong);
+  --shadow-dark-xl: var(--shadow-strong);
+  --blur-light: var(--blur-chrome-footer);
+  --blur-heavy: var(--blur-chrome);
+
+  /* Radius */
+  --radius-full: var(--radius-pill);
+  --radius: var(--radius-lg);
+
+  /* Motion — three old speeds collapse onto the system's one duration */
+  --transition-fast: var(--duration-fast) var(--easing);
+  --transition-base: var(--duration) var(--easing);
+  --transition-slow: var(--duration) var(--easing);
+
+  /* Layers */
+  --z-sticky: var(--z-header);
+  --z-fixed: var(--z-header);
+  --z-tooltip: var(--z-modal);
+
+  /* Chat widget */
+  --chat-gradient: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  --chat-button-size: 60px;
+  --chat-button-shadow: var(--shadow-strong);
+}
