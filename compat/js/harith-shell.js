@@ -61,6 +61,14 @@
         }
 
         connectedCallback() {
+            /* Anything authored inside <harith-header> is a surface-specific
+               header action — a settings menu, an extra control. Keep the real
+               nodes, not their markup, so the page's own listeners survive a
+               re-render. Captured once: render() empties this element. */
+            if (!this._actions) {
+                this._actions = document.createDocumentFragment();
+                while (this.firstChild) this._actions.appendChild(this.firstChild);
+            }
             this.render();
             // Attributes are parsed by now, but GSI may not have loaded yet.
             setTimeout(() => {
@@ -131,6 +139,7 @@
                         '</a>' +
                         navBlock +
                         '<div class="site-header__actions">' +
+                            '<span class="site-header__slot"></span>' +
                             '<button id="darkModeToggle" class="theme-toggle" aria-label="Toggle dark mode">' +
                                 (isDarkNow() ? '☀️' : '🌙') +
                             '</button>' +
@@ -139,6 +148,13 @@
                         '</div>' +
                     '</div>' +
                 '</header>';
+
+            /* Move the authored nodes back in. They are held in a fragment, so
+               appending relocates them rather than copying. */
+            if (this._actions && this._actions.childNodes.length) {
+                const slot = this.querySelector('.site-header__slot');
+                if (slot) slot.appendChild(this._actions);
+            }
 
             this.querySelectorAll('[data-action]').forEach(btn => {
                 btn.addEventListener('click', e => {
