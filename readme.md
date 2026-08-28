@@ -282,6 +282,50 @@ after changing any token, `css/` file or `compat/` source.
 | `compat/legacy-utils.css` | The v1.0.0 utilities, unchanged — they reference only legacy names, which the shim supplies |
 | `compat/js/*.js` | The shell web components and theme toggle |
 
+### The shell custom elements
+
+`harith-shell.js` defines two elements. Both render into the **light DOM**, so the
+page's own CSS styles them and no shadow boundary gets in the way.
+
+```html
+<harith-header
+    site-title="Nexus"
+    site-tagline="Connected systems. One place."
+    brand-href="https://harithkavish.com/"
+    brand-mark="/logo.png"
+    nav-links='[{"label":"Home","href":"https://harithkavish.com/"}]'>
+</harith-header>
+
+<harith-footer
+    copyright-text="Harith Kavish"
+    links='[{"label":"Home","href":"https://harithkavish.com/"}]'>
+</harith-footer>
+```
+
+`<harith-header>`
+
+| Attribute | Default | What it does |
+| --- | --- | --- |
+| `site-title` | `Harith Kavish` | The brand name |
+| `site-tagline` | — | Descriptor under the name |
+| `brand-href` | `/` | Where the brand links |
+| `brand-mark` | — | Logo image beside the name; omitted when unset |
+| `nav-links` | `[]` | JSON array of `{label, href}` or `{label, action}` |
+| `google-client-id` | — | Renders the Google sign-in slot |
+
+An entry with `action` instead of `href` renders a button and dispatches a
+bubbling `harith-shell-action` event carrying that action.
+
+`<harith-footer>`
+
+| Attribute | Default | What it does |
+| --- | --- | --- |
+| `copyright-text` | `Harith Kavish` | Name after the year, which is computed |
+| `links` | `[]` | JSON array of `{label, href}` |
+
+The header always renders its own `#darkModeToggle`; `theme-toggle.js` binds it
+through one delegated listener. A page must not add a second toggle of its own.
+
 Two deliberate behavioural changes from v1.0.0:
 
 - The header is `position: sticky`, not `position: fixed`, so it occupies flow.
@@ -323,6 +367,13 @@ Each has a `.d.ts` props contract and a `.prompt.md` with a one-line "what & whe
 example, and its variants. Each directory has one `@dsCard` HTML showing every state.
 
 ### Intentional additions
+
+`<harith-header>` renders a linked brand with an optional mark (`brand-href`,
+`brand-mark`), matching `components/shell/Brand.jsx` and the existing
+`.brand__mark` styling. Before this the web component emitted a bare
+`<div class="brand">` with text only, so the two implementations of one
+component disagreed and no consumer of the distribution could show its logo.
+
 
 The inventory above is drawn entirely from the sources. Four items are compositions the
 source expressed as ad-hoc markup rather than a named component, promoted here so consumers

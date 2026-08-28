@@ -56,7 +56,8 @@
 
     class HarithHeader extends HTMLElement {
         static get observedAttributes() {
-            return ['site-title', 'site-tagline', 'google-client-id', 'nav-links'];
+            return ['site-title', 'site-tagline', 'google-client-id', 'nav-links',
+                    'brand-href', 'brand-mark'];
         }
 
         connectedCallback() {
@@ -84,6 +85,8 @@
             catch { return []; }
         }
         get googleClientId() { return this.getAttribute('google-client-id'); }
+        get brandHref() { return this.getAttribute('brand-href') || '/'; }
+        get brandMark() { return this.getAttribute('brand-mark') || ''; }
 
         render() {
             const navMarkup = this.navLinks.map(link => link.action
@@ -93,6 +96,11 @@
 
             const tagline = this.siteTagline
                 ? '<span class="brand__descriptor">' + esc(this.siteTagline) + '</span>'
+                : '';
+
+            /* Decorative: the brand name beside it already carries the accessible text. */
+            const brandMark = this.brandMark
+                ? '<img class="brand__mark" src="' + esc(this.brandMark) + '" alt="" aria-hidden="true">'
                 : '';
 
             const navBlock = navMarkup
@@ -114,12 +122,13 @@
             this.innerHTML =
                 '<header class="site-header">' +
                     '<div class="site-header__inner">' +
-                        '<div class="brand">' +
+                        '<a class="brand" href="' + esc(this.brandHref) + '">' +
+                            brandMark +
                             '<span class="brand__text">' +
                                 '<span class="brand__name">' + esc(this.siteTitle) + '</span>' +
                                 tagline +
                             '</span>' +
-                        '</div>' +
+                        '</a>' +
                         navBlock +
                         '<div class="site-header__actions">' +
                             '<button id="darkModeToggle" class="theme-toggle" aria-label="Toggle dark mode">' +
