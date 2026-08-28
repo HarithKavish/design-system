@@ -76,10 +76,15 @@
 
     initTheme();
 
-    document.addEventListener('DOMContentLoaded', () => {
-        updateToggleText(currentTheme);
-        document.querySelectorAll('#darkModeToggle').forEach(btn => {
-            btn.addEventListener('click', toggleTheme);
-        });
+    /* One delegated listener rather than a per-button one.
+       v1.0.0 bound a listener here AND harith-shell.js assigned .onclick to
+       the same button, so every click toggled twice and the theme never
+       changed. Delegation keeps ownership in one place and keeps working when
+       <harith-header> re-renders its button. */
+    document.addEventListener('click', e => {
+        const btn = e.target && e.target.closest && e.target.closest('#darkModeToggle');
+        if (btn) toggleTheme();
     });
+
+    document.addEventListener('DOMContentLoaded', () => updateToggleText(currentTheme));
 })();

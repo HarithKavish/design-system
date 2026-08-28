@@ -144,7 +144,11 @@
         initThemeToggle() {
             const btn = this.querySelector('#darkModeToggle');
             if (!btn) return;
-            btn.onclick = toggleTheme;
+            /* theme-toggle.js, when loaded, owns the click via a delegated
+               listener. Binding here as well is what made v1.0.0 toggle twice
+               per click and appear stuck, so this is only the standalone
+               fallback for pages that do not load it. */
+            if (!window.HarithTheme) btn.onclick = toggleTheme;
             // Keep the icon honest when something else flips the theme.
             if (!this._themeObserver) {
                 this._themeObserver = new MutationObserver(() => {
