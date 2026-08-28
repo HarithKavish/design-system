@@ -28,6 +28,19 @@ banner() {
          inblock && /^}/ { print \"}\"; inblock=0; next }
          inblock { print }" "$root/tokens/$f.css"
   done
+
+  # Follow the operating system when the page has made no explicit choice, so a
+  # visitor in dark mode gets dark before any script runs — and a page that
+  # offers a "system" setting can express it by removing the attribute.
+  # Guarded against [data-theme='light'] so an explicit light choice still wins.
+  echo "/* OS preference — applies unless the page has explicitly chosen light. */"
+  echo "@media (prefers-color-scheme: dark) {"
+  for f in colors typography spacing radius elevation motion fonts status layers; do
+    awk "/^:root\[data-theme='dark'\]/ { print \"  :root:not([data-theme='light']) {\"; inblock=1; next }
+         inblock && /^}/ { print \"  }\"; inblock=0; next }
+         inblock { print \"  \" \$0 }" "$root/tokens/$f.css"
+  done
+  echo "}"
 } > "$out/tokens.css"
 
 # --- base.css --------------------------------------------------------------
