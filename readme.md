@@ -368,6 +368,13 @@ example, and its variants. Each directory has one `@dsCard` HTML showing every s
 
 ### Intentional additions
 
+`code`, `kbd`, `samp` and `pre` are styled in `base.css`. `--font-mono` was
+defined from the start with nothing consuming it, so every surface needing to
+show an endpoint or a command invented its own treatment — `api` had hard-coded
+`#22d3ee` on `#0f172a`, from the retired palette. Inline code takes the pill
+surface tinted with the accent; a block takes the card surface and hairline, and
+resets the inline treatment so the two do not stack.
+
 `<harith-header>` renders a linked brand with an optional mark (`brand-href`,
 `brand-mark`), matching `components/shell/Brand.jsx` and the existing
 `.brand__mark` styling. Before this the web component emitted a bare

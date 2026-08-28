@@ -43,6 +43,42 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   outline-offset: var(--focus-ring-offset);
 }
 
+/* Monospace. --font-mono existed from the start with nothing consuming it, so
+   every surface that needed to show an endpoint or a command invented its own.
+   Inline code is tinted with the accent and sits on the pill surface; a block
+   keeps the card surface and hairline the rest of the system uses. */
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+code {
+  padding: 0.15em 0.4em;
+  background: var(--pill-bg);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  overflow-wrap: break-word;
+}
+
+pre {
+  margin: 0;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--surface-strong);
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-card-small);
+  overflow-x: auto;
+  line-height: var(--line-height-snug);
+}
+
+/* A block sets its own surface, so the inline treatment must not double up. */
+pre code {
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  color: inherit;
+  font-size: 1em;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   * { transition-duration: 1ms !important; animation-duration: 1ms !important; }
