@@ -57,7 +57,7 @@
     class HarithHeader extends HTMLElement {
         static get observedAttributes() {
             return ['site-title', 'site-tagline', 'google-client-id', 'nav-links',
-                    'brand-href', 'brand-mark'];
+                    'brand-href', 'brand-mark', 'reading-progress'];
         }
 
         connectedCallback() {
@@ -95,6 +95,7 @@
         get googleClientId() { return this.getAttribute('google-client-id'); }
         get brandHref() { return this.getAttribute('brand-href') || '/'; }
         get brandMark() { return this.getAttribute('brand-mark') || ''; }
+        get readingProgress() { return this.hasAttribute('reading-progress'); }
 
         render() {
             const navMarkup = this.navLinks.map(link => link.action
@@ -147,6 +148,13 @@
                             navToggle +
                         '</div>' +
                     '</div>' +
+                    /* The bar is driven by the page, which sets its width as the
+                       reader scrolls. data-progress is the hook it looks for. */
+                    (this.readingProgress
+                        ? '<div class="reading-progress" aria-hidden="true">' +
+                              '<span class="reading-progress__bar" data-progress></span>' +
+                          '</div>'
+                        : '') +
                 '</header>';
 
             /* Move the authored nodes back in. They are held in a fragment, so
