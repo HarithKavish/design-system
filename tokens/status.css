@@ -1,0 +1,24 @@
+/* Status. Three states carried by the pill, plus the dot used in app surfaces.
+   Muted earth tones, never saturated UI green/amber/red. */
+:root {
+  --status-live-fg: #267f57;
+  --status-live-bg: rgba(38, 127, 87, 0.10);
+  --status-live-border: rgba(38, 127, 87, 0.20);
+
+  --status-progress-fg: #8b6a31;
+  --status-progress-bg: rgba(124, 92, 47, 0.09);
+  --status-progress-border: rgba(124, 92, 47, 0.18);
+
+  --status-neutral-fg: var(--accent);
+  --status-neutral-bg: var(--pill-bg);
+  --status-neutral-border: var(--border);
+
+  --dot-online: #267f57;
+  --dot-offline: #b4553f;
+  --dot-unknown: #9aa4ab;
+}
+
+:root[data-theme='dark'] {
+  --status-live-fg: #92d3b0;
+  --status-progress-fg: #d9be8a;
+}

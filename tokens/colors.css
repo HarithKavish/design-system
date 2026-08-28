@@ -1,0 +1,60 @@
+/* Colour. Values are the production values from harithkavish.com/style.css.
+   Light is the default; dark is a full token swap on :root[data-theme='dark']. */
+:root {
+  color-scheme: light;
+
+  /* Base surfaces */
+  --bg: #f4f9fb;
+  --bg-accent: #e4eef2;
+  --surface: rgba(255, 255, 255, 0.86);
+  --surface-strong: #ffffff;
+  --surface-soft: rgba(255, 255, 255, 0.58);
+
+  /* Ink */
+  --text: #182028;
+  --muted: #5a646d;
+
+  /* Line */
+  --border: rgba(24, 32, 40, 0.11);
+  --rule: var(--border);
+
+  /* Accent — the deep slate-teal of the HK mark */
+  --accent: #123f50;
+  --accent-strong: #081f29;
+  --pill-bg: rgba(18, 63, 80, 0.08);
+
+  /* Chrome */
+  --header-bg: rgba(244, 249, 251, 0.84);
+  --footer-bg: rgba(244, 249, 251, 0.88);
+
+  /* Semantic aliases — prefer these in components */
+  --text-body: var(--text);
+  --text-muted: var(--muted);
+  --text-on-accent: var(--surface-strong);
+  --surface-card: var(--surface);
+  --surface-raised: var(--surface-strong);
+  --surface-hover: var(--surface-soft);
+  --border-default: var(--border);
+  --border-focus: var(--accent);
+
+  /* Page field: a single radial wash of --bg-accent over --bg, nothing more */
+  --page-background: radial-gradient(circle at top, var(--bg-accent), transparent 42%), var(--bg);
+  --grid-line: rgba(128, 128, 128, 0.03);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0b1014;
+  --bg-accent: #11181d;
+  --surface: rgba(17, 24, 29, 0.86);
+  --surface-strong: #121a1f;
+  --surface-soft: rgba(24, 33, 39, 0.72);
+  --text: #eef2f4;
+  --muted: #a4afb6;
+  --border: rgba(255, 255, 255, 0.11);
+  --accent: #cedfe6;
+  --accent-strong: #f3f8fa;
+  --pill-bg: rgba(206, 223, 230, 0.08);
+  --header-bg: rgba(11, 16, 20, 0.86);
+  --footer-bg: rgba(11, 16, 20, 0.92);
+}

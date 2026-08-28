@@ -1,0 +1,12 @@
+/* Fonts.
+   The production sites request "Aptos" first — a system face on Microsoft
+   platforms with no distributable webfont in any of the source repositories.
+   No substitute family is loaded: Aptos stays first and the system fallback
+   stack renders elsewhere. Upload an Aptos webfont and add its @font-face
+   here to make the system exact. */
+:root {
+  --font-sans: "Aptos", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --font-body: var(--font-sans);
+  --font-display: var(--font-sans);
+}

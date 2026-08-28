@@ -1,0 +1,56 @@
+/* Messaging: the Converse two-panel chat, migrated onto the shared tokens.
+   Structure is Converse's (index.html + styles.css); colour, radius, shadow
+   and motion now come from the ecosystem theme rather than the 2025 glass layer. */
+.chat-layout { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: var(--gap-grid); align-items: stretch; }
+.chat-panel { display: flex; flex-direction: column; min-width: 0; gap: var(--space-sm); padding: var(--card-padding); background: var(--surface); border: var(--border-hairline) solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow); }
+.chat-panel--conversation { overflow: hidden; }
+
+.chat-section-header { font-size: 0.74rem; letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--muted); margin: 0.6rem 0 0.15rem; }
+
+.input-with-button { display: flex; align-items: center; background: var(--surface-strong); border: var(--border-hairline) solid var(--border); border-radius: var(--radius-pill); padding: 2px 2px 2px 0.35rem; }
+.input-with-button input { flex: 1; min-width: 0; background: transparent; border: none; padding: 0.6rem 0.7rem; color: var(--text); font: inherit; font-size: var(--font-size-base); }
+.input-with-button input:focus { outline: none; }
+.input-with-button button { background: transparent; border: none; padding: 0.5rem 0.75rem; color: var(--accent); cursor: pointer; font-size: 1.05rem; border-radius: var(--radius-pill); }
+.input-with-button button:hover { color: var(--text); }
+
+.user-card { display: flex; gap: var(--space-sm); align-items: center; padding: 0.75rem; border: 1px dashed var(--border); border-radius: var(--radius-card-small); background: var(--surface-soft); }
+.user-card__avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: none; }
+.user-card__meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.user-card__name { font-weight: var(--font-weight-semibold); font-size: 0.95rem; }
+.user-card__email { color: var(--muted); font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; }
+.user-card--empty { justify-content: center; color: var(--muted); font-size: 0.9rem; }
+
+.recent-chats { display: flex; flex-direction: column; gap: var(--space-xs); flex: 1; min-height: 0; overflow-y: auto; }
+.recent-chats__empty { color: var(--muted); font-size: 0.9rem; padding: var(--space-sm) 0; }
+.recent-chat-item { display: flex; align-items: center; gap: var(--space-sm); padding: 0.6rem 0.7rem; border-radius: var(--radius-card-small); background: transparent; border: var(--border-hairline) solid transparent; cursor: pointer; text-align: left; font: inherit; color: var(--text); width: 100%; transition: var(--transition-surface); }
+.recent-chat-item:hover { background: var(--surface-soft); border-color: var(--border); }
+.recent-chat-item.is-active { background: var(--surface-strong); border-color: var(--accent); }
+.recent-chat-item__avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex: none; }
+.recent-chat-item__initial { width: 34px; height: 34px; border-radius: 50%; flex: none; display: grid; place-items: center; background: var(--pill-bg); color: var(--accent); font-weight: var(--font-weight-heading); font-size: 0.9rem; }
+.recent-chat-item__info { flex: 1; min-width: 0; }
+.recent-chat-item__name { font-size: 0.95rem; font-weight: var(--font-weight-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recent-chat-item__email { font-size: 0.8rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.chat-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); padding-bottom: var(--space-sm); border-bottom: var(--border-hairline) solid var(--border); flex-shrink: 0; }
+.chat-header__left { display: flex; align-items: center; gap: var(--space-xs); min-width: 0; }
+.chat-header__peer { font-size: 1.05rem; font-weight: var(--font-weight-heading); letter-spacing: var(--tracking-tight); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-header__status { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
+.chat-back { background: transparent; border: none; color: var(--accent); cursor: pointer; font-size: 1.1rem; padding: 0.2rem 0.4rem; border-radius: var(--radius-pill); }
+.chat-back:hover { transform: translateX(-2px); }
+
+.messages { flex: 1; min-height: 0; margin: 0; padding-right: 0.35rem; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-xs); }
+.messages__empty { color: var(--muted); text-align: center; width: 100%; margin-top: 2.5rem; font-size: 0.95rem; }
+.bubble { max-width: 72%; padding: 0.7rem 0.85rem; border-radius: var(--radius-card-small); line-height: 1.45; font-size: 0.95rem; border: var(--border-hairline) solid var(--border); }
+.bubble--from-me { align-self: flex-end; background: var(--pill-bg); border-color: var(--border); }
+.bubble--from-them { align-self: flex-start; background: var(--surface-strong); }
+.bubble__timestamp { display: block; margin-top: 0.35rem; color: var(--muted); font-size: 0.74rem; font-variant-numeric: tabular-nums; }
+
+.message-form { display: flex; gap: var(--space-xs); align-items: center; flex-shrink: 0; padding-top: var(--space-sm); }
+.message-form input { flex: 1; min-width: 0; background: var(--surface-strong); border: var(--border-hairline) solid var(--border); border-radius: var(--radius-pill); padding: 0.7rem 1rem; color: var(--text); font: inherit; font-size: var(--font-size-base); }
+.message-form input:focus { outline: none; border-color: var(--accent); }
+
+@media (max-width: 900px) {
+  .chat-layout { grid-template-columns: minmax(0, 1fr); }
+  .chat-layout.show-chat .chat-panel--list { display: none; }
+  .chat-layout:not(.show-chat) .chat-panel--conversation { display: none; }
+}

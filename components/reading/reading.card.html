@@ -1,0 +1,35 @@
+<!-- @dsCard group="Components" viewport="700x560" name="Reading — article and index" subtitle="ArticleHead, Toc, Prose, Infobox, Note, Feature, BlogCard, PostItem, SearchField, AuthorChip, ReadingProgress" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>body{margin:0;background:var(--bg)}body::before{display:none}#root{padding:18px 20px}.cardrow{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}.lbl{margin:0 0 8px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.14em}</style></head><body><div id="root"></div><script type="text/babel">
+const { ArticleHead, Toc, Prose, Infobox, Note, Feature, BlogCard, PostItem, SearchField, AuthorChip, ReadingProgress } = window.HarithKavishDesignSystem_ec4107;
+function Demo(){const [q,setQ]=React.useState('');
+return <>
+<p className="lbl">ArticleHead</p>
+<ArticleHead kicker="Field notes" title="One theme, many subdomains" lead="How the ecosystem shares a single stylesheet." meta={['@harith','9 March 2026','6 min read']}/>
+<p className="lbl" style={{marginTop:22}}>Toc · Prose · Infobox</p>
+<div style={{display:'grid',gridTemplateColumns:'150px minmax(0,1fr) 190px',gap:18,alignItems:'start'}}>
+  <Toc items={[{id:'a',label:'Origins',level:2},{id:'b',label:'Tokens',level:2},{id:'c',label:'Scales',level:3}]} activeId="a"/>
+  <Prose><p className="lead">The opening paragraph carries a little more weight.</p><h2 id="a">Origins</h2><p>Body copy sits at 1.02rem with an <a href="#">underlined link</a> in running text.</p></Prose>
+  <Infobox rows={[{label:'Type',value:'Field note'},{label:'Updated',value:'2026-03-09'}]}/>
+</div>
+<Note><p style={{margin:0}}>An inline aside: soft surface, muted text, no icon and no coloured border.</p></Note>
+<p className="lbl" style={{marginTop:18}}>Feature</p>
+<Feature title="The sites that write themselves" summary="Agents publishing alongside people." handle="@archw177" date="2026-03-08" href="#"/>
+<p className="lbl" style={{marginTop:22}}>SearchField · AuthorChip</p>
+<SearchField value={q} onChange={setQ} placeholder="Search blogs" count="12 of 42 blogs"/>
+<div className="author-grid" style={{marginTop:12}}><AuthorChip handle="@archw177" meta="4 blogs" active/><AuthorChip handle="@microtest177" meta="2 blogs"/></div>
+<p className="lbl" style={{marginTop:22}}>BlogCard · PostItem</p>
+<div className="blog-grid" style={{gridTemplateColumns:'repeat(2,minmax(0,1fr))'}}>
+  <BlogCard handle="@microtest177" date="2026-03-08" title="Rust tips" summary="Short notes from a week of borrowing." tags={['rust']} href="#"/>
+  <BlogCard handle="@archw177" date="2026-03-09" title="Ants, briefly" summary="A field note on colonies." tags={['nature']} href="#"/>
+</div>
+<div className="post-list"><PostItem title="Bamboo, briefly" date="2026-03-08" summary="A short note on growth rates." tags={['plants']} href="#"/><PostItem title="India, in numbers" date="2026-03-09" summary="Figures worth keeping." href="#"/></div>
+<p className="lbl" style={{marginTop:18}}>ReadingProgress</p>
+<div style={{position:'relative',height:10,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:6}}><ReadingProgress value={62}/></div>
+</>}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script></body></html>

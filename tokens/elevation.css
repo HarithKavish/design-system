@@ -1,0 +1,22 @@
+/* Elevation. Two shadows only — a resting one and a hover one — both very
+   low-contrast. Blur is reserved for the sticky header and footer. */
+:root {
+  --shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+  --shadow-strong: 0 16px 36px rgba(15, 23, 42, 0.08);
+  --shadow-card: var(--shadow);
+  --shadow-card-hover: var(--shadow-strong);
+
+  --blur-chrome: blur(16px); /* @kind other */
+  --blur-chrome-footer: blur(12px); /* @kind other */
+
+  --lift-hover: -1px;
+  --lift-hover-card: -2px;
+  --border-hairline: 1px;
+  --focus-ring: 2px solid var(--accent);
+  --focus-ring-offset: 3px;
+}
+
+:root[data-theme='dark'] {
+  --shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+  --shadow-strong: 0 16px 36px rgba(0, 0, 0, 0.28);
+}

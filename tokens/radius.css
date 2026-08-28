@@ -1,0 +1,14 @@
+/* Radius. Cards are generously round (1.4rem); anything interactive that is
+   pill-shaped is fully round (999px). Nothing in between is invented. */
+:root {
+  --radius-pill: 999px;
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.1rem;
+  --radius-xl: 1.4rem;
+
+  --radius-card: var(--radius-xl);
+  --radius-card-small: var(--radius-lg);
+  --radius-control: var(--radius-pill);
+  --radius-image: var(--radius-lg);
+}

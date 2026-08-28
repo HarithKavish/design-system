@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Ecosystem page" description="A harithkavish.com page: sticky shell, hero, section head, product cards, footer." -->
+<helmet>
+<script src="./ds-base.js"></script>
+</helmet>
+<div class="site-shell">
+  <x-import component-from-global-scope="HarithKavishDesignSystem_ec4107.SiteHeader" logo-src="../../logo.png" hint-size="100%,72px"></x-import>
+  <main class="site-main">
+    <section class="hero">
+      <p class="hero__eyebrow">Independent software business</p>
+      <h1 class="hero__title">Specialized software services.</h1>
+      <p class="hero__lead">Designed independently. Built thoughtfully. Continuously improved. Replace this lead with one paragraph that says what the surface is for and nothing more.</p>
+      <div class="hero__actions">
+        <a class="button button--primary" href="#">Explore Products</a>
+        <a class="button button--secondary" href="#">Learn About the Approach</a>
+      </div>
+    </section>
+    <section class="section">
+      <div class="section-head">
+        <p class="section-head__eyebrow">Ecosystem</p>
+        <h2 class="section-head__title">A growing set of subdomains, each with one job.</h2>
+        <p class="section-head__lead">One sentence explaining the section. Titles are noun phrases and end in a full stop.</p>
+      </div>
+      <div class="card-grid">
+        <article class="card">
+          <div class="card__topline"><span class="pill pill--live">Live</span><span class="card__route">blog.harithkavish.com</span></div>
+          <h3 class="card__title">Blog</h3>
+          <p class="card__body">Pages where humans and agents can write, individually or together.</p>
+          <a class="card__link" href="#">Visit blog.harithkavish.com</a>
+        </article>
+        <article class="card">
+          <div class="card__topline"><span class="pill pill--progress">In progress</span><span class="card__route">/account.html</span></div>
+          <h3 class="card__title">Harith Account</h3>
+          <p class="card__meta">Identity, preferences, and account access across the ecosystem.</p>
+          <p class="card__body">A calm account layer for login, service access, and future customer settings.</p>
+          <a class="card__link" href="#">Open product page</a>
+        </article>
+        <article class="card">
+          <div class="card__topline"><span class="pill pill--planned">Planned</span><span class="card__route">store.harithkavish.com</span></div>
+          <h3 class="card__title">Store</h3>
+          <p class="card__body">Where all the software products will be available.</p>
+          <a class="card__link" href="#">Visit store.harithkavish.com</a>
+        </article>
+      </div>
+    </section>
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-head__title">Why this surface exists.</h2>
+        <p class="section-head__lead">Use the split grid when a list of principles needs a quiet aside beside it.</p>
+      </div>
+      <div class="split-grid">
+        <div class="split-grid__primary">
+          <ul class="principles-list">
+            <li>Products evolve through long-term vision.</li>
+            <li>Improvements benefit every customer.</li>
+            <li>No custom forks.</li>
+            <li>Software should become more valuable over time.</li>
+          </ul>
+        </div>
+        <aside class="split-grid__secondary note-panel">
+          <p>The note panel is the one place the writing is allowed to be reflective rather than descriptive. Two short paragraphs at most.</p>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <x-import component-from-global-scope="HarithKavishDesignSystem_ec4107.SiteFooter" hint-size="100%,88px"></x-import>
+</div>
+
+</x-dc>
+</body>
+</html>
