@@ -16,6 +16,18 @@
  */
 
 (function () {
+    /* The placeholder person, shown when an account has no picture.
+
+       Not an empty circle: a blank where a face belongs reads as something that
+       failed to load, and an account without a picture is complete rather than
+       broken. The same mark the account service draws, so one account looks like
+       itself everywhere. */
+    const PERSON_MARK =
+        '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor">' +
+            '<path d="M12 12.4a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4Z"/>' +
+            '<path d="M12 14.1c-4.05 0-7.3 2.2-7.3 4.9v.9a.9.9 0 0 0 .9.9h12.8a.9.9 0 0 0 .9-.9v-.9c0-2.7-3.25-4.9-7.3-4.9Z"/>' +
+        '</svg>';
+
 
     /** The ecosystem's front door. Every surface sends people to the same one. */
     const SIGN_IN_URL = 'https://auth.harithkavish.com/';
@@ -316,7 +328,7 @@
                identity service's business — no surface marks the provider. */
             const avatar = user.picture
                 ? '<img src="' + esc(user.picture) + '" alt="" aria-hidden="true" class="signed-in-button__avatar" loading="lazy" referrerpolicy="no-referrer" />'
-                : '<span class="signed-in-button__avatar signed-in-button__avatar--empty" aria-hidden="true"></span>';
+                : '<span class="signed-in-button__avatar signed-in-button__avatar--empty" aria-hidden="true">' + PERSON_MARK + '</span>';
 
             container.innerHTML =
                 '<button type="button" class="signed-in-button" aria-label="Signed in as ' + esc(user.name) + '. Open account menu." aria-expanded="false" aria-controls="' + dropdownId + '">' +
