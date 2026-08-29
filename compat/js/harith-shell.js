@@ -3,7 +3,7 @@
  * Version: 2.0.0 (v1.0.0-compatible)
  *
  * Defines <harith-header> and <harith-footer>.
- * Handles the theme toggle and Google Sign-In internally, and dispatches
+ * Handles the theme toggle and the signed-in state internally, and dispatches
  * 'harith-auth-change' on login/logout.
  *
  * Ported from v1.1.1. The attribute contract, the events and the
@@ -16,15 +16,6 @@
  */
 
 (function () {
-    /* Google's own mark. Used only to say which provider the identity came
-       from, beside the picture — not as a button. */
-    const GOOGLE_MARK =
-        '<svg viewBox="0 0 48 48" focusable="false">' +
-            '<path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>' +
-            '<path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>' +
-            '<path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/>' +
-            '<path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>' +
-        '</svg>';
 
     /** The ecosystem's front door. Every surface sends people to the same one. */
     const SIGN_IN_URL = 'https://auth.harithkavish.com/';
@@ -321,23 +312,15 @@
             this._gsiPending = false;
             /* The header shows the picture and nothing else: a name beside it
                repeats what the picture already says and pushes the nav around
-               as it changes length. The provider mark says where the identity
-               came from, which the picture alone cannot. */
+               as it changes length. How someone proved who they are is the
+               identity service's business — no surface marks the provider. */
             const avatar = user.picture
                 ? '<img src="' + esc(user.picture) + '" alt="" aria-hidden="true" class="signed-in-button__avatar" loading="lazy" referrerpolicy="no-referrer" />'
                 : '<span class="signed-in-button__avatar signed-in-button__avatar--empty" aria-hidden="true"></span>';
 
-            /* Only when the identity actually came from Google. Someone who
-               signed in with a password is not a Google user, and a mark that
-               says otherwise is simply wrong. */
-            const provider = user.provider === 'google'
-                ? '<span class="signed-in-button__provider" aria-hidden="true">' + GOOGLE_MARK + '</span>'
-                : '';
-
             container.innerHTML =
                 '<button type="button" class="signed-in-button" aria-label="Signed in as ' + esc(user.name) + '. Open account menu." aria-expanded="false" aria-controls="' + dropdownId + '">' +
                     avatar +
-                    provider +
                 '</button>' +
                 '<div id="' + dropdownId + '" class="user-dropdown-menu">' +
                     '<div class="user-dropdown-header">' +
