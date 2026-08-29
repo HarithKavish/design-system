@@ -57,6 +57,21 @@
    only reserve the box and keep the dropdown anchored to it. */
 .google-button-wrapper { position: relative; display: inline-flex; align-items: center; flex: none; }
 
+/* Our own sign-in control, so nothing sits behind it but the header. Built from
+   the same tokens as every other button; Google's mark is required on it. */
+.signin-button {
+  gap: 0.5rem;
+  padding: 0.42rem 0.9rem;
+  background: var(--surface-strong);
+  color: var(--text);
+  border: var(--border-hairline) solid var(--border);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.signin-button:hover { border-color: var(--accent); background: var(--surface); }
+.signin-button__mark { display: inline-flex; width: 15px; height: 15px; flex: none; }
+.signin-button__mark svg { width: 100%; height: 100%; display: block; }
+
 .signed-in-button {
   position: relative; display: inline-flex; padding: 2px;
   border-radius: var(--radius-pill);

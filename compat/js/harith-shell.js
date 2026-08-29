@@ -356,29 +356,60 @@
          * redrawn whenever the theme changes.
          */
         renderSignInButton(container) {
-            if (!window.google || !google.accounts || !google.accounts.id) return;
-            container.innerHTML = '';
-            google.accounts.id.renderButton(container, {
-                theme: isDarkNow() ? 'filled_black' : 'outline',
-                size: 'large',
-                shape: 'pill',
-                text: 'signin'
-            });
+            if (!window.google || !google.accounts || !google.accounts.oauth2) return;
 
-            if (!this._gsiThemeObserver) {
-                this._gsiThemeObserver = new MutationObserver(() => {
-                    const slot = this.querySelector('#googleSignInButton');
-                    /* Only while the button is what is on show — once someone is
-                       signed in the slot holds their picture instead. */
-                    if (slot && !slot.querySelector('.signed-in-button')) {
-                        this.renderSignInButton(slot);
-                    }
-                });
-                this._gsiThemeObserver.observe(document.documentElement, {
-                    attributes: true,
-                    attributeFilter: ['data-theme', 'class']
-                });
-            }
+            /* Google's own renderButton draws into a cross-origin iframe that
+               paints its own white page behind the button. On a dark header
+               that reads as a white slab, and no stylesheet here can reach
+               inside the frame to stop it — theme=filled_black changes the
+               button, not the page behind it.
+               So the button is ours, built from the design system like every
+               other control, and Google's token flow is asked for on click. */
+            container.innerHTML =
+                '<button type="button" class="button signin-button">' +
+                    '<span class="signin-button__mark" aria-hidden="true">' + GOOGLE_MARK + '</span>' +
+                    '<span>Sign in</span>' +
+                '</button>';
+
+            container.querySelector('.signin-button').onclick = () => this.startGoogleSignIn();
+        }
+
+        /**
+         * Opens Google's account chooser and keeps whoever comes back.
+         *
+         * A click is a user gesture, so the popup is not blocked. The token is
+         * used once to read the profile and is not kept: what is stored is a
+         * name, an address and a picture — display state, never authority.
+         */
+        startGoogleSignIn() {
+            if (this._signInClient) { this._signInClient.requestAccessToken(); return; }
+            this._signInClient = google.accounts.oauth2.initTokenClient({
+                client_id: this.googleClientId,
+                scope: 'openid email profile',
+                callback: (response) => {
+                    if (!response || !response.access_token) return;
+                    fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                        headers: { Authorization: 'Bearer ' + response.access_token }
+                    })
+                        .then(r => (r.ok ? r.json() : null))
+                        .then(profile => {
+                            if (!profile) return;
+                            const user = {
+                                name: profile.name || profile.email,
+                                email: profile.email,
+                                picture: profile.picture
+                            };
+                            store.set(GOOGLE_USER_KEY, JSON.stringify(user));
+                            const slot = this.querySelector('#googleSignInButton');
+                            if (slot) this.renderUserProfile(slot, user);
+                            this.dispatchEvent(new CustomEvent('harith-auth-change', {
+                                detail: { user }, bubbles: true
+                            }));
+                        })
+                        .catch(() => { /* offline or blocked: the button stays */ });
+                }
+            });
+            this._signInClient.requestAccessToken();
         }
 
         renderUserProfile(container, user) {
