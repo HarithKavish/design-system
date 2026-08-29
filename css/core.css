@@ -29,7 +29,22 @@
 .button--primary { background: var(--accent); color: var(--text-on-accent); border-color: transparent; box-shadow: var(--shadow-strong); }
 .button--primary:hover { background: var(--accent-strong); color: var(--text-on-accent); }
 .button--secondary { background: transparent; color: var(--text); box-shadow: none; }
+/* Destructive. Carries the status colour rather than the accent, so the one
+   button on a page that cannot be undone does not look like the one that can. */
+.button--danger { background: var(--status-danger-bg); color: var(--status-danger-fg); border-color: var(--status-danger-border); box-shadow: none; }
+.button--danger:hover { background: var(--status-danger-fg); color: var(--surface); border-color: transparent; }
 .button[disabled] { opacity: 0.45; pointer-events: none; }
+
+/* Form feedback. A message about the whole form rather than one field: the
+   field's own error sits under the field, this sits with the submit. */
+.form-error {
+  margin: 0; padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-inner);
+  border: var(--border-hairline) solid var(--status-danger-border);
+  background: var(--status-danger-bg); color: var(--status-danger-fg);
+  font-size: var(--font-size-sm);
+}
+.form-note { margin: 0; color: var(--muted); font-size: var(--font-size-sm); }
 
 .card-grid, .panel-grid, .status-list, .stack { display: grid; gap: var(--gap-grid); }
 .card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
