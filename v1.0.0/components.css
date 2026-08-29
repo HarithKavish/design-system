@@ -459,7 +459,8 @@ harith-header, harith-footer { display: contents; }
 .google-button-wrapper { position: relative; display: inline-flex; align-items: center; flex: none; }
 
 .signed-in-button {
-  display: inline-flex; padding: 2px; border-radius: var(--radius-pill);
+  position: relative; display: inline-flex; padding: 2px;
+  border-radius: var(--radius-pill);
   border: 2px solid transparent; background: none; cursor: pointer;
   transition: var(--transition-interactive);
 }
@@ -467,6 +468,31 @@ harith-header, harith-footer { display: contents; }
 .signed-in-button.active { border-color: var(--accent); }
 .signed-in-button__avatar {
   width: 36px; height: 36px; border-radius: var(--radius-pill); object-fit: cover; display: block;
+}
+/* No picture came back. A blank circle rather than initials, so the header
+   stays wordless either way. */
+.signed-in-button__avatar--empty {
+  background: var(--pill-bg);
+  border: var(--border-hairline) solid var(--border);
+}
+
+/* Which provider the identity came from. Sits on the edge of the picture, small
+   enough to read as a badge rather than a second control — it is not clickable. */
+.signed-in-button__provider {
+  position: absolute; right: -1px; bottom: -1px;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px; padding: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-strong);
+  box-shadow: 0 0 0 var(--border-hairline) var(--border);
+  pointer-events: none;
+}
+.signed-in-button__provider svg { width: 100%; height: 100%; display: block; }
+
+.user-dropdown-email {
+  display: block; margin-top: 0.1rem;
+  font-size: var(--font-size-xs); font-weight: var(--font-weight-normal);
+  color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
 .user-dropdown-menu {
