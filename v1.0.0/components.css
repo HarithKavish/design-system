@@ -501,12 +501,16 @@ harith-header, harith-footer { display: contents; }
 .signed-in-button__avatar {
   width: 36px; height: 36px; border-radius: var(--radius-pill); object-fit: cover; display: block;
 }
-/* No picture came back. A blank circle rather than initials, so the header
-   stays wordless either way. */
+/* No picture chosen. A person mark rather than initials, so the header stays
+   wordless either way, and rather than a blank circle, which reads as a picture
+   that failed to load. */
 .signed-in-button__avatar--empty {
+  display: inline-flex; align-items: center; justify-content: center;
   background: var(--pill-bg);
   border: var(--border-hairline) solid var(--border);
+  color: var(--muted);
 }
+.signed-in-button__avatar--empty svg { width: 62%; height: 62%; display: block; }
 
 .user-dropdown-email {
   display: block; margin-top: 0.1rem;
