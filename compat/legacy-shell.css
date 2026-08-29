@@ -92,19 +92,6 @@
   border: var(--border-hairline) solid var(--border);
 }
 
-/* Which provider the identity came from. Sits on the edge of the picture, small
-   enough to read as a badge rather than a second control — it is not clickable. */
-.signed-in-button__provider {
-  position: absolute; right: -1px; bottom: -1px;
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 15px; height: 15px; padding: 2px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-strong);
-  box-shadow: 0 0 0 var(--border-hairline) var(--border);
-  pointer-events: none;
-}
-.signed-in-button__provider svg { width: 100%; height: 100%; display: block; }
-
 .user-dropdown-email {
   display: block; margin-top: 0.1rem;
   font-size: var(--font-size-xs); font-weight: var(--font-weight-normal);
