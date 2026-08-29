@@ -295,6 +295,19 @@
                show nothing — they report identity, they do not offer it. */
             if (!this.googleClientId) { container.innerHTML = ''; return; }
 
+            /* Load Google's library here rather than asking every surface to
+               carry the script tag. Without it the retry below would spin for
+               the life of the page on any surface that forgot it. */
+            if (!window.google && !document.querySelector('script[data-harith-gsi]')) {
+                const gsi = document.createElement('script');
+                gsi.src = 'https://accounts.google.com/gsi/client';
+                gsi.async = true;
+                gsi.defer = true;
+                gsi.setAttribute('data-harith-gsi', '');
+                document.head.appendChild(gsi);
+            }
+
+            let waited = 0;
             const initGSI = () => {
                 if (window.google && google.accounts && google.accounts.id) {
                     google.accounts.id.initialize({
@@ -312,7 +325,10 @@
                         }
                     });
                     google.accounts.id.renderButton(container, { theme: 'outline', size: 'large', shape: 'pill' });
-                } else {
+                } else if (waited < 10000) {
+                    /* Bounded: a blocked or unreachable library should leave the
+                       surface without a sign-in button, not retrying forever. */
+                    waited += 200;
                     setTimeout(initGSI, 200);
                 }
             };
