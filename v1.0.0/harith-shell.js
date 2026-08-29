@@ -16,7 +16,27 @@
  */
 
 (function () {
-    const GOOGLE_USER_KEY = 'harith_google_user';
+    const GOOGLE_USER_KEY = 'user';
+
+    /* Shared across every *.harithkavish.com surface, so signing in on one is
+       signing in on all. Display state only — it says who the reader is, never
+       that they are allowed to do anything. Authorisation is a server's job. */
+    const store = window.HarithStore || {
+        get: k => { try { return localStorage.getItem('hk.' + k); } catch (e) { return null; } },
+        set: (k, v) => { try { localStorage.setItem('hk.' + k, v); } catch (e) { /* blocked */ } },
+        remove: k => { try { localStorage.removeItem('hk.' + k); } catch (e) { /* non-fatal */ } },
+        migrate: () => {},
+        subscribe: () => {}
+    };
+    store.migrate(GOOGLE_USER_KEY, 'harith_google_user');
+
+    function readSharedUser() {
+        try {
+            const raw = store.get(GOOGLE_USER_KEY);
+            const user = raw ? JSON.parse(raw) : null;
+            return (user && user.name) ? user : null;
+        } catch (e) { return null; }
+    }
 
     function toggleTheme() {
         if (window.HarithTheme) {
@@ -136,9 +156,11 @@
                   '</span></button>'
                 : '';
 
-            const googleSlot = this.googleClientId
-                ? '<div class="google-button-wrapper" id="googleSignInButton" aria-label="Sign in with Google"></div>'
-                : '';
+            /* Rendered whether or not this surface offers sign-in: without a
+               client id it still shows who the reader is, from the shared
+               store. CSS hides it while it is empty. */
+            const googleSlot =
+                '<div class="google-button-wrapper" id="googleSignInButton"></div>';
 
             /* Hold anything the page authored — whatever is not the header we
                rendered last time — so the innerHTML swap below cannot destroy
@@ -250,29 +272,31 @@
 
         initGoogleAuth() {
             const container = this.querySelector('#googleSignInButton');
-            if (!container || !this.googleClientId) return;
+            if (!container) return;
 
-            try {
-                const stored = localStorage.getItem(GOOGLE_USER_KEY);
-                if (stored) {
-                    const user = JSON.parse(stored);
-                    if (user && user.name) {
-                        this.renderUserProfile(container, user);
-                        this.dispatchEvent(new CustomEvent('harith-auth-change', { detail: { user }, bubbles: true }));
-                        return;
-                    }
-                }
-            } catch (e) { /* corrupt or blocked storage; fall through to sign-in */ }
+            const shared = readSharedUser();
+            if (shared) {
+                this.renderUserProfile(container, shared);
+                this.dispatchEvent(new CustomEvent('harith-auth-change', { detail: { user: shared }, bubbles: true }));
+                return;
+            }
+
+            /* Nobody signed in. Surfaces that do not carry a client id simply
+               show nothing — they report identity, they do not offer it. */
+            if (!this.googleClientId) { container.innerHTML = ''; return; }
 
             const initGSI = () => {
                 if (window.google && google.accounts && google.accounts.id) {
                     google.accounts.id.initialize({
                         client_id: this.googleClientId,
+                        /* A reader who signed in on another surface and still has
+                           a Google session is restored without being asked again. */
+                        auto_select: true,
                         callback: (response) => {
                             const payload = decodeJwt(response.credential);
                             if (!payload) return;
                             const user = { name: payload.name, picture: payload.picture, email: payload.email };
-                            try { localStorage.setItem(GOOGLE_USER_KEY, JSON.stringify(user)); } catch (e) { /* non-fatal */ }
+                            store.set(GOOGLE_USER_KEY, JSON.stringify(user));
                             this.renderUserProfile(container, user);
                             this.dispatchEvent(new CustomEvent('harith-auth-change', { detail: { user }, bubbles: true }));
                         }
@@ -325,7 +349,13 @@
             }
 
             logout.onclick = () => {
-                try { localStorage.removeItem(GOOGLE_USER_KEY); } catch (e) { /* non-fatal */ }
+                store.remove(GOOGLE_USER_KEY);
+                /* Otherwise the next surface silently signs them straight back in. */
+                try {
+                    if (window.google && google.accounts && google.accounts.id) {
+                        google.accounts.id.disableAutoSelect();
+                    }
+                } catch (e) { /* GSI absent on this surface */ }
                 this.dispatchEvent(new CustomEvent('harith-auth-change', { detail: { user: null }, bubbles: true }));
                 location.reload();
             };
@@ -455,6 +485,15 @@
     }
 
     onReady(initOverlayScrollbar);
+
+    /* Signed in or out on another surface — bring this header into line when
+       the tab is looked at again, rather than leaving it claiming otherwise. */
+    store.subscribe(function (key) {
+        if (key !== GOOGLE_USER_KEY) return;
+        document.querySelectorAll('harith-header').forEach(function (header) {
+            if (typeof header.initGoogleAuth === 'function') header.initGoogleAuth();
+        });
+    });
 
     if (!customElements.get('harith-header')) customElements.define('harith-header', HarithHeader);
     if (!customElements.get('harith-footer')) customElements.define('harith-footer', HarithFooter);
