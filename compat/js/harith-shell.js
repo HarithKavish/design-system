@@ -374,15 +374,17 @@
             }
 
             logout.onclick = () => {
-                store.remove(GOOGLE_USER_KEY);
-                /* Otherwise the next surface silently signs them straight back in. */
-                try {
-                    if (window.google && google.accounts && google.accounts.id) {
-                        google.accounts.id.disableAutoSelect();
-                    }
-                } catch (e) { /* GSI absent on this surface */ }
+                /* Signing out happens at the identity service, not here.
+                   Clearing the shared value alone only made the reader *look*
+                   signed out — the session survived, and going back to the
+                   front door found them still signed in.
+
+                   A surface cannot post to the sign-out route itself: the
+                   session cookie is SameSite=Lax, so a cross-site post arrives
+                   without it. A top-level navigation carries it, and the page
+                   we land on posts from its own origin. */
                 this.dispatchEvent(new CustomEvent('harith-auth-change', { detail: { user: null }, bubbles: true }));
-                location.reload();
+                location.href = this.signInUrl + 'signout?next=' + encodeURIComponent(location.href);
             };
         }
     }
