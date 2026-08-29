@@ -15,13 +15,24 @@
 
 (function () {
     const THEME_KEY = 'theme';
+
+    /* Shared across every *.harithkavish.com surface, so a choice made on one
+       is the choice everywhere. Falls back to this origin's own storage when
+       harith-store.js is not loaded or the ecosystem cookie cannot be set. */
+    const store = window.HarithStore || {
+        get: k => { try { return localStorage.getItem('hk.' + k); } catch (e) { return null; } },
+        set: (k, v) => { try { localStorage.setItem('hk.' + k, v); } catch (e) { /* blocked */ } },
+        migrate: () => {},
+        subscribe: () => {}
+    };
+
+    /* Carry over a preference saved before the store existed. */
+    store.migrate(THEME_KEY, 'theme');
     let currentTheme = 'light';
 
     function detectPreferredTheme() {
-        try {
-            const saved = localStorage.getItem(THEME_KEY);
-            if (saved === 'dark' || saved === 'light') return saved;
-        } catch (e) { /* storage blocked; fall through to system preference */ }
+        const saved = store.get(THEME_KEY);
+        if (saved === 'dark' || saved === 'light') return saved;
         return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
 
@@ -52,9 +63,7 @@
         document.documentElement.classList.toggle('dark-mode', isDark);
         onBody(body => body.classList.toggle('dark-mode', isDark));
 
-        if (persist) {
-            try { localStorage.setItem(THEME_KEY, currentTheme); } catch (e) { /* non-fatal */ }
-        }
+        if (persist) store.set(THEME_KEY, currentTheme);
         updateToggleText(currentTheme);
         notifyThemeChange(currentTheme);
     }
@@ -87,4 +96,13 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => updateToggleText(currentTheme));
+
+    /* Changed on another subdomain — adopt it when this tab is looked at again,
+       so two open ecosystem tabs do not disagree. */
+    store.subscribe((key, value) => {
+        if (key !== THEME_KEY) return;
+        if ((value === 'dark' || value === 'light') && value !== currentTheme) {
+            applyTheme(value, false);
+        }
+    });
 })();
