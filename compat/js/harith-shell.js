@@ -307,6 +307,14 @@
                 document.head.appendChild(gsi);
             }
 
+            /* initGoogleAuth runs from connectedCallback, from an attribute
+               change, and when the shared identity changes. Each call used to
+               start its own retry loop, and renderButton appends rather than
+               replaces — which is how a second button ended up stacked behind
+               the first. */
+            if (this._gsiPending) return;
+            this._gsiPending = true;
+
             let waited = 0;
             const initGSI = () => {
                 if (window.google && google.accounts && google.accounts.id) {
@@ -324,19 +332,58 @@
                             this.dispatchEvent(new CustomEvent('harith-auth-change', { detail: { user }, bubbles: true }));
                         }
                     });
-                    google.accounts.id.renderButton(container, { theme: 'outline', size: 'large', shape: 'pill' });
+                    this._gsiPending = false;
+                    this.renderSignInButton(container);
                 } else if (waited < 10000) {
                     /* Bounded: a blocked or unreachable library should leave the
                        surface without a sign-in button, not retrying forever. */
                     waited += 200;
                     setTimeout(initGSI, 200);
+                } else {
+                    this._gsiPending = false;
                 }
             };
             initGSI();
         }
 
+        /**
+         * Google's button, drawn once.
+         *
+         * The container is emptied first because renderButton appends: calling
+         * it twice leaves two buttons on top of each other. Its theme follows
+         * the page, so the button is not a white slab on a dark header — Google
+         * offers no transparent variant, so the closest match is chosen and
+         * redrawn whenever the theme changes.
+         */
+        renderSignInButton(container) {
+            if (!window.google || !google.accounts || !google.accounts.id) return;
+            container.innerHTML = '';
+            google.accounts.id.renderButton(container, {
+                theme: isDarkNow() ? 'filled_black' : 'outline',
+                size: 'large',
+                shape: 'pill',
+                text: 'signin'
+            });
+
+            if (!this._gsiThemeObserver) {
+                this._gsiThemeObserver = new MutationObserver(() => {
+                    const slot = this.querySelector('#googleSignInButton');
+                    /* Only while the button is what is on show — once someone is
+                       signed in the slot holds their picture instead. */
+                    if (slot && !slot.querySelector('.signed-in-button')) {
+                        this.renderSignInButton(slot);
+                    }
+                });
+                this._gsiThemeObserver.observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['data-theme', 'class']
+                });
+            }
+        }
+
         renderUserProfile(container, user) {
             const dropdownId = 'userProfileDropdown';
+            this._gsiPending = false;
             /* The header shows the picture and nothing else: a name beside it
                repeats what the picture already says and pushes the nav around
                as it changes length. The provider mark says where the identity
