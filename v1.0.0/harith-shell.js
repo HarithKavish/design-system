@@ -26,6 +26,9 @@
             '<path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>' +
         '</svg>';
 
+    /** The ecosystem's front door. Every surface sends people to the same one. */
+    const SIGN_IN_URL = 'https://auth.harithkavish.com/';
+
     const GOOGLE_USER_KEY = 'user';
 
     /* Shared across every *.harithkavish.com surface, so signing in on one is
@@ -94,8 +97,8 @@
 
     class HarithHeader extends HTMLElement {
         static get observedAttributes() {
-            return ['site-title', 'site-tagline', 'google-client-id', 'nav-links',
-                    'brand-href', 'brand-mark', 'reading-progress'];
+            return ['site-title', 'site-tagline', 'nav-links', 'brand-href',
+                    'brand-mark', 'reading-progress', 'sign-in-url'];
         }
 
         connectedCallback() {
@@ -126,7 +129,6 @@
             this.render();
             this.initThemeToggle();
             this.initNavToggle();
-            if (name === 'google-client-id') this.initGoogleAuth();
         }
 
         get siteTitle() { return this.getAttribute('site-title') || 'Harith Kavish'; }
@@ -135,9 +137,10 @@
             try { return JSON.parse(this.getAttribute('nav-links') || '[]'); }
             catch { return []; }
         }
-        get googleClientId() { return this.getAttribute('google-client-id'); }
         get brandHref() { return this.getAttribute('brand-href') || '/'; }
         get brandMark() { return this.getAttribute('brand-mark') || ''; }
+        /** Overridable so a preview deployment can point at its own instance. */
+        get signInUrl() { return this.getAttribute('sign-in-url') || SIGN_IN_URL; }
         get readingProgress() { return this.hasAttribute('reading-progress'); }
 
         render() {
@@ -291,125 +294,26 @@
                 return;
             }
 
-            /* Nobody signed in. Surfaces that do not carry a client id simply
-               show nothing — they report identity, they do not offer it. */
-            if (!this.googleClientId) { container.innerHTML = ''; return; }
-
-            /* Load Google's library here rather than asking every surface to
-               carry the script tag. Without it the retry below would spin for
-               the life of the page on any surface that forgot it. */
-            if (!window.google && !document.querySelector('script[data-harith-gsi]')) {
-                const gsi = document.createElement('script');
-                gsi.src = 'https://accounts.google.com/gsi/client';
-                gsi.async = true;
-                gsi.defer = true;
-                gsi.setAttribute('data-harith-gsi', '');
-                document.head.appendChild(gsi);
-            }
-
-            /* initGoogleAuth runs from connectedCallback, from an attribute
-               change, and when the shared identity changes. Each call used to
-               start its own retry loop, and renderButton appends rather than
-               replaces — which is how a second button ended up stacked behind
-               the first. */
-            if (this._gsiPending) return;
-            this._gsiPending = true;
-
-            let waited = 0;
-            const initGSI = () => {
-                if (window.google && google.accounts && google.accounts.id) {
-                    google.accounts.id.initialize({
-                        client_id: this.googleClientId,
-                        /* A reader who signed in on another surface and still has
-                           a Google session is restored without being asked again. */
-                        auto_select: true,
-                        callback: (response) => {
-                            const payload = decodeJwt(response.credential);
-                            if (!payload) return;
-                            const user = { name: payload.name, picture: payload.picture, email: payload.email };
-                            store.set(GOOGLE_USER_KEY, JSON.stringify(user));
-                            this.renderUserProfile(container, user);
-                            this.dispatchEvent(new CustomEvent('harith-auth-change', { detail: { user }, bubbles: true }));
-                        }
-                    });
-                    this._gsiPending = false;
-                    this.renderSignInButton(container);
-                } else if (waited < 10000) {
-                    /* Bounded: a blocked or unreachable library should leave the
-                       surface without a sign-in button, not retrying forever. */
-                    waited += 200;
-                    setTimeout(initGSI, 200);
-                } else {
-                    this._gsiPending = false;
-                }
-            };
-            initGSI();
+            this.renderSignInButton(container);
         }
 
         /**
-         * Google's button, drawn once.
+         * The way in is our own front door, not a provider's.
          *
-         * The container is emptied first because renderButton appends: calling
-         * it twice leaves two buttons on top of each other. Its theme follows
-         * the page, so the button is not a white slab on a dark header — Google
-         * offers no transparent variant, so the closest match is chosen and
-         * redrawn whenever the theme changes.
+         * Every surface sends people to the same place, where they sign in to a
+         * HarithKavish account — and may choose Google there if they want to. A
+         * provider button on each surface would make the provider look like the
+         * account, which it is not: it is one way of proving one.
+         *
+         * The current page travels along, so signing in returns the reader to
+         * where they were rather than to a dashboard they did not ask for.
          */
         renderSignInButton(container) {
-            if (!window.google || !google.accounts || !google.accounts.oauth2) return;
-
-            /* Google's own renderButton draws into a cross-origin iframe that
-               paints its own white page behind the button. On a dark header
-               that reads as a white slab, and no stylesheet here can reach
-               inside the frame to stop it — theme=filled_black changes the
-               button, not the page behind it.
-               So the button is ours, built from the design system like every
-               other control, and Google's token flow is asked for on click. */
+            const href = this.signInUrl + '?next=' + encodeURIComponent(location.href);
             container.innerHTML =
-                '<button type="button" class="button signin-button">' +
-                    '<span class="signin-button__mark" aria-hidden="true">' + GOOGLE_MARK + '</span>' +
-                    '<span>Sign in</span>' +
-                '</button>';
-
-            container.querySelector('.signin-button').onclick = () => this.startGoogleSignIn();
-        }
-
-        /**
-         * Opens Google's account chooser and keeps whoever comes back.
-         *
-         * A click is a user gesture, so the popup is not blocked. The token is
-         * used once to read the profile and is not kept: what is stored is a
-         * name, an address and a picture — display state, never authority.
-         */
-        startGoogleSignIn() {
-            if (this._signInClient) { this._signInClient.requestAccessToken(); return; }
-            this._signInClient = google.accounts.oauth2.initTokenClient({
-                client_id: this.googleClientId,
-                scope: 'openid email profile',
-                callback: (response) => {
-                    if (!response || !response.access_token) return;
-                    fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                        headers: { Authorization: 'Bearer ' + response.access_token }
-                    })
-                        .then(r => (r.ok ? r.json() : null))
-                        .then(profile => {
-                            if (!profile) return;
-                            const user = {
-                                name: profile.name || profile.email,
-                                email: profile.email,
-                                picture: profile.picture
-                            };
-                            store.set(GOOGLE_USER_KEY, JSON.stringify(user));
-                            const slot = this.querySelector('#googleSignInButton');
-                            if (slot) this.renderUserProfile(slot, user);
-                            this.dispatchEvent(new CustomEvent('harith-auth-change', {
-                                detail: { user }, bubbles: true
-                            }));
-                        })
-                        .catch(() => { /* offline or blocked: the button stays */ });
-                }
-            });
-            this._signInClient.requestAccessToken();
+                '<a class="button signin-button" href="' + esc(href) + '">' +
+                    '<span>Sign in to Nexus</span>' +
+                '</a>';
         }
 
         renderUserProfile(container, user) {
@@ -423,10 +327,17 @@
                 ? '<img src="' + esc(user.picture) + '" alt="" aria-hidden="true" class="signed-in-button__avatar" loading="lazy" referrerpolicy="no-referrer" />'
                 : '<span class="signed-in-button__avatar signed-in-button__avatar--empty" aria-hidden="true"></span>';
 
+            /* Only when the identity actually came from Google. Someone who
+               signed in with a password is not a Google user, and a mark that
+               says otherwise is simply wrong. */
+            const provider = user.provider === 'google'
+                ? '<span class="signed-in-button__provider" aria-hidden="true">' + GOOGLE_MARK + '</span>'
+                : '';
+
             container.innerHTML =
                 '<button type="button" class="signed-in-button" aria-label="Signed in as ' + esc(user.name) + '. Open account menu." aria-expanded="false" aria-controls="' + dropdownId + '">' +
                     avatar +
-                    '<span class="signed-in-button__provider" aria-hidden="true">' + GOOGLE_MARK + '</span>' +
+                    provider +
                 '</button>' +
                 '<div id="' + dropdownId + '" class="user-dropdown-menu">' +
                     '<div class="user-dropdown-header">' +
