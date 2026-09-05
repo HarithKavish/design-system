@@ -3,7 +3,7 @@
  * Version: 2.0.0 (v1.0.0-compatible)
  *
  * Defines <harith-header> and <harith-footer>.
- * Handles the theme toggle and Google Sign-In internally, and dispatches
+ * Handles the theme toggle and the signed-in state internally, and dispatches
  * 'harith-auth-change' on login/logout.
  *
  * Ported from v1.1.1. The attribute contract, the events and the
@@ -16,7 +16,43 @@
  */
 
 (function () {
-    const GOOGLE_USER_KEY = 'harith_google_user';
+    /* The placeholder person, shown when an account has no picture.
+
+       Not an empty circle: a blank where a face belongs reads as something that
+       failed to load, and an account without a picture is complete rather than
+       broken. The same mark the account service draws, so one account looks like
+       itself everywhere. */
+    const PERSON_MARK =
+        '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor">' +
+            '<path d="M12 12.4a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4Z"/>' +
+            '<path d="M12 14.1c-4.05 0-7.3 2.2-7.3 4.9v.9a.9.9 0 0 0 .9.9h12.8a.9.9 0 0 0 .9-.9v-.9c0-2.7-3.25-4.9-7.3-4.9Z"/>' +
+        '</svg>';
+
+
+    /** The ecosystem's front door. Every surface sends people to the same one. */
+    const SIGN_IN_URL = 'https://auth.harithkavish.com/';
+
+    const GOOGLE_USER_KEY = 'user';
+
+    /* Shared across every *.harithkavish.com surface, so signing in on one is
+       signing in on all. Display state only — it says who the reader is, never
+       that they are allowed to do anything. Authorisation is a server's job. */
+    const store = window.HarithStore || {
+        get: k => { try { return localStorage.getItem('hk.' + k); } catch (e) { return null; } },
+        set: (k, v) => { try { localStorage.setItem('hk.' + k, v); } catch (e) { /* blocked */ } },
+        remove: k => { try { localStorage.removeItem('hk.' + k); } catch (e) { /* non-fatal */ } },
+        migrate: () => {},
+        subscribe: () => {}
+    };
+    store.migrate(GOOGLE_USER_KEY, 'harith_google_user');
+
+    function readSharedUser() {
+        try {
+            const raw = store.get(GOOGLE_USER_KEY);
+            const user = raw ? JSON.parse(raw) : null;
+            return (user && user.name) ? user : null;
+        } catch (e) { return null; }
+    }
 
     function toggleTheme() {
         if (window.HarithTheme) {
@@ -64,8 +100,8 @@
 
     class HarithHeader extends HTMLElement {
         static get observedAttributes() {
-            return ['site-title', 'site-tagline', 'google-client-id', 'nav-links',
-                    'brand-href', 'brand-mark', 'reading-progress'];
+            return ['site-title', 'site-tagline', 'nav-links', 'brand-href',
+                    'brand-mark', 'reading-progress', 'sign-in-url'];
         }
 
         connectedCallback() {
@@ -96,7 +132,6 @@
             this.render();
             this.initThemeToggle();
             this.initNavToggle();
-            if (name === 'google-client-id') this.initGoogleAuth();
         }
 
         get siteTitle() { return this.getAttribute('site-title') || 'Harith Kavish'; }
@@ -105,9 +140,10 @@
             try { return JSON.parse(this.getAttribute('nav-links') || '[]'); }
             catch { return []; }
         }
-        get googleClientId() { return this.getAttribute('google-client-id'); }
         get brandHref() { return this.getAttribute('brand-href') || '/'; }
         get brandMark() { return this.getAttribute('brand-mark') || ''; }
+        /** Overridable so a preview deployment can point at its own instance. */
+        get signInUrl() { return this.getAttribute('sign-in-url') || SIGN_IN_URL; }
         get readingProgress() { return this.hasAttribute('reading-progress'); }
 
         render() {
@@ -136,9 +172,11 @@
                   '</span></button>'
                 : '';
 
-            const googleSlot = this.googleClientId
-                ? '<div class="google-button-wrapper" id="googleSignInButton" aria-label="Sign in with Google"></div>'
-                : '';
+            /* Rendered whether or not this surface offers sign-in: without a
+               client id it still shows who the reader is, from the shared
+               store. CSS hides it while it is empty. */
+            const googleSlot =
+                '<div class="google-button-wrapper" id="googleSignInButton"></div>';
 
             /* Hold anything the page authored — whatever is not the header we
                rendered last time — so the innerHTML swap below cannot destroy
@@ -250,52 +288,58 @@
 
         initGoogleAuth() {
             const container = this.querySelector('#googleSignInButton');
-            if (!container || !this.googleClientId) return;
+            if (!container) return;
 
-            try {
-                const stored = localStorage.getItem(GOOGLE_USER_KEY);
-                if (stored) {
-                    const user = JSON.parse(stored);
-                    if (user && user.name) {
-                        this.renderUserProfile(container, user);
-                        this.dispatchEvent(new CustomEvent('harith-auth-change', { detail: { user }, bubbles: true }));
-                        return;
-                    }
-                }
-            } catch (e) { /* corrupt or blocked storage; fall through to sign-in */ }
+            const shared = readSharedUser();
+            if (shared) {
+                this.renderUserProfile(container, shared);
+                this.dispatchEvent(new CustomEvent('harith-auth-change', { detail: { user: shared }, bubbles: true }));
+                return;
+            }
 
-            const initGSI = () => {
-                if (window.google && google.accounts && google.accounts.id) {
-                    google.accounts.id.initialize({
-                        client_id: this.googleClientId,
-                        callback: (response) => {
-                            const payload = decodeJwt(response.credential);
-                            if (!payload) return;
-                            const user = { name: payload.name, picture: payload.picture, email: payload.email };
-                            try { localStorage.setItem(GOOGLE_USER_KEY, JSON.stringify(user)); } catch (e) { /* non-fatal */ }
-                            this.renderUserProfile(container, user);
-                            this.dispatchEvent(new CustomEvent('harith-auth-change', { detail: { user }, bubbles: true }));
-                        }
-                    });
-                    google.accounts.id.renderButton(container, { theme: 'outline', size: 'large', shape: 'pill' });
-                } else {
-                    setTimeout(initGSI, 200);
-                }
-            };
-            initGSI();
+            this.renderSignInButton(container);
+        }
+
+        /**
+         * The way in is our own front door, not a provider's.
+         *
+         * Every surface sends people to the same place, where they sign in to a
+         * HarithKavish account — and may choose Google there if they want to. A
+         * provider button on each surface would make the provider look like the
+         * account, which it is not: it is one way of proving one.
+         *
+         * The current page travels along, so signing in returns the reader to
+         * where they were rather than to a dashboard they did not ask for.
+         */
+        renderSignInButton(container) {
+            const href = this.signInUrl + '?next=' + encodeURIComponent(location.href);
+            container.innerHTML =
+                '<a class="button signin-button" href="' + esc(href) + '">' +
+                    '<span>Sign in to Nexus</span>' +
+                '</a>';
         }
 
         renderUserProfile(container, user) {
             const dropdownId = 'userProfileDropdown';
+            this._gsiPending = false;
+            /* The header shows the picture and nothing else: a name beside it
+               repeats what the picture already says and pushes the nav around
+               as it changes length. How someone proved who they are is the
+               identity service's business — no surface marks the provider. */
+            const avatar = user.picture
+                ? '<img src="' + esc(user.picture) + '" alt="" aria-hidden="true" class="signed-in-button__avatar" loading="lazy" referrerpolicy="no-referrer" />'
+                : '<span class="signed-in-button__avatar signed-in-button__avatar--empty" aria-hidden="true">' + PERSON_MARK + '</span>';
+
             container.innerHTML =
-                '<button type="button" class="signed-in-button" aria-label="Signed in as ' + esc(user.name) + '" aria-expanded="false" aria-controls="' + dropdownId + '">' +
-                    '<img src="' + esc(user.picture || '') + '" alt="' + esc(user.name) + '" class="signed-in-button__avatar" loading="lazy" />' +
+                '<button type="button" class="signed-in-button" aria-label="Signed in as ' + esc(user.name) + '. Open account menu." aria-expanded="false" aria-controls="' + dropdownId + '">' +
+                    avatar +
                 '</button>' +
                 '<div id="' + dropdownId + '" class="user-dropdown-menu">' +
                     '<div class="user-dropdown-header">' +
                         '<span class="user-dropdown-name">' + esc(user.name) + '</span>' +
+                        (user.email ? '<span class="user-dropdown-email">' + esc(user.email) + '</span>' : '') +
                     '</div>' +
-                    '<button type="button" class="user-dropdown-action" id="logoutBtn">Sign Out</button>' +
+                    '<button type="button" class="user-dropdown-action" id="logoutBtn">Sign out</button>' +
                 '</div>';
 
             const btn = container.querySelector('.signed-in-button');
@@ -325,9 +369,17 @@
             }
 
             logout.onclick = () => {
-                try { localStorage.removeItem(GOOGLE_USER_KEY); } catch (e) { /* non-fatal */ }
+                /* Signing out happens at the identity service, not here.
+                   Clearing the shared value alone only made the reader *look*
+                   signed out — the session survived, and going back to the
+                   front door found them still signed in.
+
+                   A surface cannot post to the sign-out route itself: the
+                   session cookie is SameSite=Lax, so a cross-site post arrives
+                   without it. A top-level navigation carries it, and the page
+                   we land on posts from its own origin. */
                 this.dispatchEvent(new CustomEvent('harith-auth-change', { detail: { user: null }, bubbles: true }));
-                location.reload();
+                location.href = this.signInUrl + 'signout?next=' + encodeURIComponent(location.href);
             };
         }
     }
@@ -455,6 +507,15 @@
     }
 
     onReady(initOverlayScrollbar);
+
+    /* Signed in or out on another surface — bring this header into line when
+       the tab is looked at again, rather than leaving it claiming otherwise. */
+    store.subscribe(function (key) {
+        if (key !== GOOGLE_USER_KEY) return;
+        document.querySelectorAll('harith-header').forEach(function (header) {
+            if (typeof header.initGoogleAuth === 'function') header.initGoogleAuth();
+        });
+    });
 
     if (!customElements.get('harith-header')) customElements.define('harith-header', HarithHeader);
     if (!customElements.get('harith-footer')) customElements.define('harith-footer', HarithFooter);

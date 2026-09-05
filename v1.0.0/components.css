@@ -27,6 +27,10 @@ harith-header, harith-footer { display: contents; }
 .site-header__actions { display: inline-flex; align-items: center; gap: 0.6rem; min-width: 0; flex: none; }
 /* Surface-specific header actions. Contributes nothing when a page authors none. */
 .site-header__slot { display: contents; }
+/* The identity slot renders on every surface so it can show who is signed in.
+   Where nobody is, and the surface offers no sign-in, it holds nothing and must
+   not take up room. */
+.google-button-wrapper:empty { display: none; }
 
 .brand { display: inline-flex; align-items: center; gap: 0.8rem; min-width: 0; }
 .brand__mark { width: 2.6rem; height: 2.6rem; object-fit: contain; flex: none; }
@@ -129,7 +133,22 @@ harith-header, harith-footer { display: contents; }
 .button--primary { background: var(--accent); color: var(--text-on-accent); border-color: transparent; box-shadow: var(--shadow-strong); }
 .button--primary:hover { background: var(--accent-strong); color: var(--text-on-accent); }
 .button--secondary { background: transparent; color: var(--text); box-shadow: none; }
+/* Destructive. Carries the status colour rather than the accent, so the one
+   button on a page that cannot be undone does not look like the one that can. */
+.button--danger { background: var(--status-danger-bg); color: var(--status-danger-fg); border-color: var(--status-danger-border); box-shadow: none; }
+.button--danger:hover { background: var(--status-danger-fg); color: var(--surface); border-color: transparent; }
 .button[disabled] { opacity: 0.45; pointer-events: none; }
+
+/* Form feedback. A message about the whole form rather than one field: the
+   field's own error sits under the field, this sits with the submit. */
+.form-error {
+  margin: 0; padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-inner);
+  border: var(--border-hairline) solid var(--status-danger-border);
+  background: var(--status-danger-bg); color: var(--status-danger-fg);
+  font-size: var(--font-size-sm);
+}
+.form-note { margin: 0; color: var(--muted); font-size: var(--font-size-sm); }
 
 .card-grid, .panel-grid, .status-list, .stack { display: grid; gap: var(--gap-grid); }
 .card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -454,8 +473,26 @@ harith-header, harith-footer { display: contents; }
    only reserve the box and keep the dropdown anchored to it. */
 .google-button-wrapper { position: relative; display: inline-flex; align-items: center; flex: none; }
 
+/* Our own sign-in control, so nothing sits behind it but the header. Built from
+   the same tokens as every other button; Google's mark is required on it. */
+/* The way in. One control, on every surface, pointing at the same front door. */
+.signin-button {
+  padding: 0.42rem 0.95rem;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border: var(--border-hairline) solid transparent;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+.signin-button:hover {
+  background: var(--accent-strong);
+  color: var(--text-on-accent);
+}
+
 .signed-in-button {
-  display: inline-flex; padding: 2px; border-radius: var(--radius-pill);
+  position: relative; display: inline-flex; padding: 2px;
+  border-radius: var(--radius-pill);
   border: 2px solid transparent; background: none; cursor: pointer;
   transition: var(--transition-interactive);
 }
@@ -463,6 +500,22 @@ harith-header, harith-footer { display: contents; }
 .signed-in-button.active { border-color: var(--accent); }
 .signed-in-button__avatar {
   width: 36px; height: 36px; border-radius: var(--radius-pill); object-fit: cover; display: block;
+}
+/* No picture chosen. A person mark rather than initials, so the header stays
+   wordless either way, and rather than a blank circle, which reads as a picture
+   that failed to load. */
+.signed-in-button__avatar--empty {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--pill-bg);
+  border: var(--border-hairline) solid var(--border);
+  color: var(--muted);
+}
+.signed-in-button__avatar--empty svg { width: 62%; height: 62%; display: block; }
+
+.user-dropdown-email {
+  display: block; margin-top: 0.1rem;
+  font-size: var(--font-size-xs); font-weight: var(--font-weight-normal);
+  color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
 .user-dropdown-menu {

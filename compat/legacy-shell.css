@@ -57,8 +57,26 @@
    only reserve the box and keep the dropdown anchored to it. */
 .google-button-wrapper { position: relative; display: inline-flex; align-items: center; flex: none; }
 
+/* Our own sign-in control, so nothing sits behind it but the header. Built from
+   the same tokens as every other button; Google's mark is required on it. */
+/* The way in. One control, on every surface, pointing at the same front door. */
+.signin-button {
+  padding: 0.42rem 0.95rem;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border: var(--border-hairline) solid transparent;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+.signin-button:hover {
+  background: var(--accent-strong);
+  color: var(--text-on-accent);
+}
+
 .signed-in-button {
-  display: inline-flex; padding: 2px; border-radius: var(--radius-pill);
+  position: relative; display: inline-flex; padding: 2px;
+  border-radius: var(--radius-pill);
   border: 2px solid transparent; background: none; cursor: pointer;
   transition: var(--transition-interactive);
 }
@@ -66,6 +84,22 @@
 .signed-in-button.active { border-color: var(--accent); }
 .signed-in-button__avatar {
   width: 36px; height: 36px; border-radius: var(--radius-pill); object-fit: cover; display: block;
+}
+/* No picture chosen. A person mark rather than initials, so the header stays
+   wordless either way, and rather than a blank circle, which reads as a picture
+   that failed to load. */
+.signed-in-button__avatar--empty {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--pill-bg);
+  border: var(--border-hairline) solid var(--border);
+  color: var(--muted);
+}
+.signed-in-button__avatar--empty svg { width: 62%; height: 62%; display: block; }
+
+.user-dropdown-email {
+  display: block; margin-top: 0.1rem;
+  font-size: var(--font-size-xs); font-weight: var(--font-weight-normal);
+  color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
 .user-dropdown-menu {

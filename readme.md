@@ -282,6 +282,54 @@ after changing any token, `css/` file or `compat/` source.
 | `compat/legacy-utils.css` | The v1.0.0 utilities, unchanged — they reference only legacy names, which the shim supplies |
 | `compat/js/*.js` | The shell web components and theme toggle |
 
+### `harith-store.js` — shared ecosystem state
+
+`localStorage` is scoped to an origin, and this ecosystem is a dozen of them.
+A preference saved on `nexus` was invisible to `blog`, so the family behaved
+like unrelated sites. `harith-store.js` puts small, ecosystem-wide values in a
+cookie scoped to `.harithkavish.com`, which every one of those origins can read,
+and mirrors them to `localStorage` so a blocked cookie still works locally.
+
+**Load it first**, before `theme-toggle.js` and `harith-shell.js` — both use it
+and fall back to per-origin storage if it is absent.
+
+```js
+HarithStore.get('theme');                  // 'dark' | 'light' | null
+HarithStore.set('theme', 'dark');          // shared with every subdomain
+HarithStore.remove('theme');
+HarithStore.migrate('theme', 'theme');     // adopt a pre-store localStorage value
+HarithStore.subscribe((key, value) => {}); // changed on another surface
+HarithStore.scope();                       // '.harithkavish.com', or null off-ecosystem
+```
+
+Cookies fire no storage event, so a change made on another subdomain is picked
+up when the tab is next focused. That is enough for "switch tab, come back, the
+ecosystem agrees" without polling.
+
+**What belongs in it:** small, ecosystem-wide preferences and display state —
+the theme, who is signed in, a dismissed banner.
+
+**What must never go in it:** credentials, tokens, or anything granting access.
+Every subdomain and every script on them can read it, and it rides along on
+every request to the domain. It is display state, never proof: authorisation is
+decided on a server. Values above ~1.5KB stay in `localStorage` only and do not
+follow the reader, so keep them small.
+
+### Identity across the ecosystem
+
+`<harith-header>` always renders the identity slot, so **a surface shows who is
+signed in even if it does not offer sign-in itself**. Signing in on one surface
+signs in on all; the slot is empty and takes no space when nobody is.
+
+`google-client-id` is what makes a surface *offer* sign-in. GSI is initialised
+with `auto_select`, so a reader with a live Google session is restored without
+being asked again, and signing out clears the shared value and calls
+`disableAutoSelect()` so the next surface does not sign them straight back in.
+
+> Each origin that carries `google-client-id` must be listed under **Authorized
+> JavaScript origins** for that client in the Google Cloud console. That is a
+> console change, not a code one.
+
 ### The shell custom elements
 
 `harith-shell.js` defines two elements. Both render into the **light DOM**, so the

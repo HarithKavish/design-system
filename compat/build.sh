@@ -67,6 +67,7 @@ banner() {
 } > "$out/utils.css"
 
 # --- scripts ---------------------------------------------------------------
+cp "$root/compat/js/harith-store.js"   "$out/harith-store.js"
 cp "$root/compat/js/theme-toggle.js"   "$out/theme-toggle.js"
 cp "$root/compat/js/harith-shell.js"   "$out/harith-shell.js"
 cp "$root/compat/js/widget-loader.js"  "$out/widget-loader.js"
