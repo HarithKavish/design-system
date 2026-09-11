@@ -14,15 +14,16 @@
 harith-header, harith-footer { display: contents; }
 
 .site-header {
-  position: sticky; top: 0; z-index: var(--z-header);
-  border-bottom: var(--border-hairline) solid var(--border);
-  background: var(--header-bg);
+  position: sticky; top: var(--space-md); z-index: var(--z-header);
+  width: var(--container); margin: var(--space-md) auto 0;
+  border: var(--border-hairline) solid var(--border); border-radius: var(--radius-pill);
+  background: var(--header-bg); box-shadow: var(--shadow-strong);
   backdrop-filter: var(--blur-chrome); -webkit-backdrop-filter: var(--blur-chrome);
 }
-.site-header__inner, .site-footer__inner, .site-main { width: var(--container); margin: 0 auto; }
+.site-footer__inner, .site-main { width: var(--container); margin: 0 auto; }
 .site-header__inner {
   position: relative; display: flex; align-items: center; justify-content: space-between;
-  gap: var(--space-md); padding: var(--header-padding-block) 0;
+  gap: var(--space-md); padding: var(--header-padding-block) var(--space-lg);
 }
 .site-header__actions { display: inline-flex; align-items: center; gap: 0.6rem; min-width: 0; flex: none; }
 /* Surface-specific header actions. Contributes nothing when a page authors none. */
