@@ -508,6 +508,71 @@
 
     onReady(initOverlayScrollbar);
 
+    /* ── Custom cursor ──────────────────────────────────────────────────
+       A heading arrow, like a maps app's puck, that points the way the
+       pointer is moving. Colors live entirely in cursor.css as tokens, so
+       theme inversion is free; this only ever tracks position and rotation.
+
+       Capability-gated, not device-sniffed: a fine, hoverable pointer is
+       what a mouse looks like, and touch has neither. Skipped outright
+       under reduced-motion, same policy as every other decorative motion
+       in the system (see tokens/motion.css). */
+    function initCustomCursor() {
+        if (!window.matchMedia) return;
+        if (!matchMedia('(pointer: fine) and (hover: hover)').matches) return;
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        const HEADING_SVG =
+            '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+                '<path d="M12 1.5 19 21 12 17 5 21Z"/>' +
+            '</svg>';
+
+        const el = document.createElement('div');
+        el.className = 'harith-cursor';
+        el.innerHTML = '<div class="harith-cursor__heading">' + HEADING_SVG + '</div>';
+        document.body.appendChild(el);
+        const heading = el.querySelector('.harith-cursor__heading');
+
+        const TEXT_TARGETS = 'input, textarea, select, [contenteditable="true"], [contenteditable=""]';
+        const TURN_THRESHOLD = 4; // px moved before the heading updates, so it doesn't flicker while nearly still
+        let angle = 0;
+        let lastTurnX = null, lastTurnY = null;
+        let pendingX = 0, pendingY = 0, frame = null;
+
+        function applyFrame() {
+            frame = null;
+            el.style.transform = 'translate3d(' + pendingX + 'px,' + pendingY + 'px,0)';
+        }
+
+        function onMove(e) {
+            pendingX = e.clientX; pendingY = e.clientY;
+            if (!frame) frame = requestAnimationFrame(applyFrame);
+
+            if (lastTurnX !== null) {
+                const dx = e.clientX - lastTurnX, dy = e.clientY - lastTurnY;
+                if (Math.sqrt(dx * dx + dy * dy) >= TURN_THRESHOLD) {
+                    angle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+                    heading.style.transform = 'rotate(' + angle + 'deg)';
+                    lastTurnX = e.clientX; lastTurnY = e.clientY;
+                }
+            } else {
+                lastTurnX = e.clientX; lastTurnY = e.clientY;
+            }
+
+            el.classList.add('is-visible');
+            el.classList.toggle('is-hidden-over-text', !!(e.target && e.target.closest && e.target.closest(TEXT_TARGETS)));
+        }
+
+        function hide() { el.classList.remove('is-visible'); }
+
+        document.documentElement.classList.add('harith-cursor-active');
+        addEventListener('mousemove', onMove, { passive: true });
+        document.addEventListener('mouseleave', hide);
+        addEventListener('blur', hide);
+    }
+
+    onReady(initCustomCursor);
+
     /* Signed in or out on another surface — bring this header into line when
        the tab is looked at again, rather than leaving it claiming otherwise. */
     store.subscribe(function (key) {

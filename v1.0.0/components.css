@@ -415,6 +415,61 @@ harith-header, harith-footer { display: contents; }
   .chat-layout:not(.show-chat) .chat-panel--conversation { display: none; }
 }
 
+/* Custom cursor: a heading arrow, like a maps app's puck, that points the way
+   the pointer is moving. Pure tokens for color, so it inverts with theme for
+   free — no dark/light branching here. JS (see harith-shell.js) only ever
+   toggles classes and a rotation angle; every color decision lives here.
+
+   Opt-in by capability, not by device sniffing: a fine, hoverable pointer is
+   what a mouse looks like, and is absent on touch. Decorative motion drops
+   under reduced-motion, same as everywhere else in the system. */
+html.harith-cursor-active {
+  cursor: none;
+}
+html.harith-cursor-active a,
+html.harith-cursor-active button,
+html.harith-cursor-active [role='button'],
+html.harith-cursor-active summary {
+  cursor: none;
+}
+/* Text entry keeps its own caret — the heading arrow has nothing to say here. */
+html.harith-cursor-active input,
+html.harith-cursor-active textarea,
+html.harith-cursor-active select,
+html.harith-cursor-active [contenteditable='true'],
+html.harith-cursor-active [contenteditable=''] {
+  cursor: text;
+}
+
+.harith-cursor {
+  position: fixed; top: 0; left: 0; z-index: var(--z-cursor);
+  width: 26px; height: 26px; margin: -13px 0 0 -13px;
+  pointer-events: none; opacity: 0;
+  transition: opacity var(--duration-fast) var(--easing);
+}
+.harith-cursor.is-visible { opacity: 1; }
+.harith-cursor.is-hidden-over-text { opacity: 0; }
+
+.harith-cursor__heading {
+  width: 100%; height: 100%;
+  transition: transform var(--duration-fast) linear;
+}
+.harith-cursor__heading svg { display: block; width: 100%; height: 100%; }
+
+/* The mark itself: a dark heading arrow with a light halo in light mode,
+   flipped in dark mode — using --text/--surface-strong exactly as every
+   other themed surface does, so it always reads against the page. */
+.harith-cursor__heading path {
+  fill: var(--text);
+  stroke: var(--surface-strong);
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .harith-cursor { display: none; }
+}
+
 /* Legacy shell shim — Harith Design System v1.0.0 compatibility.
 
    v1.0.0's harith-shell.js emitted .shared-* class names. The current system
