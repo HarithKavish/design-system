@@ -533,7 +533,9 @@
         document.body.appendChild(el);
         const heading = el.querySelector('.harith-cursor__heading');
 
-        const TEXT_TARGETS = 'input, textarea, select, [contenteditable="true"], [contenteditable=""]';
+        const TEXT_TARGETS = 'input[type="text"], input[type="email"], input[type="password"], ' +
+            'input[type="search"], input[type="tel"], input[type="url"], input[type="number"], ' +
+            'input:not([type]), textarea, [contenteditable="true"], [contenteditable=""]';
         const TURN_THRESHOLD = 4; // px moved before the heading updates, so it doesn't flicker while nearly still
         let angle = 0;
         let lastTurnX = null, lastTurnY = null;
@@ -563,7 +565,12 @@
             el.classList.toggle('is-hidden-over-text', !!(e.target && e.target.closest && e.target.closest(TEXT_TARGETS)));
         }
 
-        function hide() { el.classList.remove('is-visible'); }
+        function hide() {
+            el.classList.remove('is-visible');
+            // Otherwise the next move after a re-entry elsewhere computes a
+            // heading from a stale pre-leave position.
+            lastTurnX = null; lastTurnY = null;
+        }
 
         document.documentElement.classList.add('harith-cursor-active');
         addEventListener('mousemove', onMove, { passive: true });
