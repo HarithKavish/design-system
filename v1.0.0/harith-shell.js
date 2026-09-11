@@ -540,17 +540,26 @@
         /* A heading straight off two raw points is noisy: a couple of
            trembly, sub-pixel-ish steps in slightly different directions
            swing the angle wildly even though the pointer barely moved.
-           Smoothing the velocity VECTOR (not the angle — averaging angles
-           breaks across the +-180 seam) over several events irons that
-           out, and gating on the smoothed vector's own magnitude means a
-           burst of tiny jitter never gets to speak for a heading at all;
-           it only updates once real, sustained motion has built up. */
-        const SMOOTHING = 0.25;      // lower = smoother/slower to turn
-        const NOISE_FLOOR = 1.5;     // px per event below which a delta is ignored outright
-        const MIN_HEADING_SPEED = 2.5; // smoothed px/event needed before trusting a heading
+
+           An earlier version smoothed the per-event delta with an EMA and
+           gated on ITS magnitude — but an EMA started from 0 only ever
+           approaches a constant input asymptotically, never reaching or
+           exceeding it. Any sustained movement whose per-event delta sat
+           between the noise floor and that gate would smooth toward a
+           value just under the gate forever, freezing the heading no
+           matter how long the motion continued.
+
+           Accumulating the net displacement VECTOR since the last update,
+           and resetting it only once it crosses the gate, has neither
+           problem: real, sustained movement keeps adding to the same
+           direction and is guaranteed to cross the gate eventually (no
+           asymptote to stall against), while back-and-forth jitter mostly
+           cancels itself in the sum instead of nudging the angle. */
+        const NOISE_FLOOR = 1.5;           // px per event below which a delta is ignored outright
+        const ANGLE_UPDATE_DISTANCE = 8;   // net accumulated px before the heading updates (and resets)
         let angle = 0;
         let rawX = null, rawY = null;
-        let smoothDx = 0, smoothDy = 0;
+        let accumDx = 0, accumDy = 0;
         let pendingX = 0, pendingY = 0, frame = null;
 
         function applyFrame() {
@@ -565,11 +574,11 @@
             if (rawX !== null) {
                 const dx = e.clientX - rawX, dy = e.clientY - rawY;
                 if (Math.sqrt(dx * dx + dy * dy) >= NOISE_FLOOR) {
-                    smoothDx += (dx - smoothDx) * SMOOTHING;
-                    smoothDy += (dy - smoothDy) * SMOOTHING;
-                    if (Math.sqrt(smoothDx * smoothDx + smoothDy * smoothDy) >= MIN_HEADING_SPEED) {
-                        angle = Math.atan2(smoothDy, smoothDx) * 180 / Math.PI + 90;
+                    accumDx += dx; accumDy += dy;
+                    if (Math.sqrt(accumDx * accumDx + accumDy * accumDy) >= ANGLE_UPDATE_DISTANCE) {
+                        angle = Math.atan2(accumDy, accumDx) * 180 / Math.PI + 90;
                         heading.style.transform = 'rotate(' + angle + 'deg)';
+                        accumDx = 0; accumDy = 0;
                     }
                 }
             }
@@ -584,7 +593,7 @@
             // Otherwise the next move after a re-entry elsewhere computes a
             // heading from a stale pre-leave position.
             rawX = null; rawY = null;
-            smoothDx = 0; smoothDy = 0;
+            accumDx = 0; accumDy = 0;
         }
 
         document.documentElement.classList.add('harith-cursor-active');
