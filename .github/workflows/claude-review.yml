@@ -28,7 +28,7 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           track_progress: true
-          claude_args: '--allowedTools "Bash(gh pr merge:*)"'
+          claude_args: '--allowedTools "Bash(gh pr merge:*),Bash(git diff:*),Bash(git log:*)"'
           prompt: |
             Review this pull request for correctness bugs and post your findings
             as a PR comment. Lead with real defects; do not pad with style nits.
