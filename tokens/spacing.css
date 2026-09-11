@@ -19,4 +19,5 @@
   --main-padding-block: clamp(2rem, 5vw, 4rem) 0 clamp(3rem, 7vw, 5rem);
   --section-gap: clamp(3rem, 7vw, 5.25rem);
   --header-padding-block: 0.85rem;
+  --footer-padding-block: 0.5rem;
 }
