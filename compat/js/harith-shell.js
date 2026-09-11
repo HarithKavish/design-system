@@ -536,9 +536,21 @@
         const TEXT_TARGETS = 'input[type="text"], input[type="email"], input[type="password"], ' +
             'input[type="search"], input[type="tel"], input[type="url"], input[type="number"], ' +
             'input:not([type]), textarea, [contenteditable="true"], [contenteditable=""]';
-        const TURN_THRESHOLD = 4; // px moved before the heading updates, so it doesn't flicker while nearly still
+
+        /* A heading straight off two raw points is noisy: a couple of
+           trembly, sub-pixel-ish steps in slightly different directions
+           swing the angle wildly even though the pointer barely moved.
+           Smoothing the velocity VECTOR (not the angle — averaging angles
+           breaks across the +-180 seam) over several events irons that
+           out, and gating on the smoothed vector's own magnitude means a
+           burst of tiny jitter never gets to speak for a heading at all;
+           it only updates once real, sustained motion has built up. */
+        const SMOOTHING = 0.25;      // lower = smoother/slower to turn
+        const NOISE_FLOOR = 1.5;     // px per event below which a delta is ignored outright
+        const MIN_HEADING_SPEED = 2.5; // smoothed px/event needed before trusting a heading
         let angle = 0;
-        let lastTurnX = null, lastTurnY = null;
+        let rawX = null, rawY = null;
+        let smoothDx = 0, smoothDy = 0;
         let pendingX = 0, pendingY = 0, frame = null;
 
         function applyFrame() {
@@ -550,16 +562,18 @@
             pendingX = e.clientX; pendingY = e.clientY;
             if (!frame) frame = requestAnimationFrame(applyFrame);
 
-            if (lastTurnX !== null) {
-                const dx = e.clientX - lastTurnX, dy = e.clientY - lastTurnY;
-                if (Math.sqrt(dx * dx + dy * dy) >= TURN_THRESHOLD) {
-                    angle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
-                    heading.style.transform = 'rotate(' + angle + 'deg)';
-                    lastTurnX = e.clientX; lastTurnY = e.clientY;
+            if (rawX !== null) {
+                const dx = e.clientX - rawX, dy = e.clientY - rawY;
+                if (Math.sqrt(dx * dx + dy * dy) >= NOISE_FLOOR) {
+                    smoothDx += (dx - smoothDx) * SMOOTHING;
+                    smoothDy += (dy - smoothDy) * SMOOTHING;
+                    if (Math.sqrt(smoothDx * smoothDx + smoothDy * smoothDy) >= MIN_HEADING_SPEED) {
+                        angle = Math.atan2(smoothDy, smoothDx) * 180 / Math.PI + 90;
+                        heading.style.transform = 'rotate(' + angle + 'deg)';
+                    }
                 }
-            } else {
-                lastTurnX = e.clientX; lastTurnY = e.clientY;
             }
+            rawX = e.clientX; rawY = e.clientY;
 
             el.classList.add('is-visible');
             el.classList.toggle('is-hidden-over-text', !!(e.target && e.target.closest && e.target.closest(TEXT_TARGETS)));
@@ -569,7 +583,8 @@
             el.classList.remove('is-visible');
             // Otherwise the next move after a re-entry elsewhere computes a
             // heading from a stale pre-leave position.
-            lastTurnX = null; lastTurnY = null;
+            rawX = null; rawY = null;
+            smoothDx = 0; smoothDy = 0;
         }
 
         document.documentElement.classList.add('harith-cursor-active');
