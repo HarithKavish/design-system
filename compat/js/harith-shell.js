@@ -576,7 +576,26 @@
                 if (Math.sqrt(dx * dx + dy * dy) >= NOISE_FLOOR) {
                     accumDx += dx; accumDy += dy;
                     if (Math.sqrt(accumDx * accumDx + accumDy * accumDy) >= ANGLE_UPDATE_DISTANCE) {
-                        angle = Math.atan2(accumDy, accumDx) * 180 / Math.PI + 90;
+                        /* atan2 wraps at +-180deg, but `angle` drives a
+                           CSS transition — setting it straight to atan2's
+                           output makes the transition animate the raw
+                           numeric jump (e.g. 178deg -> -179deg is a 357deg
+                           swing to the browser, even though the true turn
+                           is 3deg the other way), which is exactly the
+                           "spins like crazy once a lap" bug moving in
+                           circles surfaces. Instead, move `angle` by only
+                           the shortest signed delta from where it already
+                           is, letting it accumulate past +-360deg rather
+                           than ever snapping back into +-180deg. */
+                        const target = Math.atan2(accumDy, accumDx) * 180 / Math.PI + 90;
+                        // JS % keeps the dividend's sign, so this isn't a true
+                        // mod — normalize into (-180, 180] explicitly rather
+                        // than assume a single +540 offset lands it there,
+                        // which only holds once `angle` has stayed small.
+                        let delta = (target - angle) % 360;
+                        if (delta > 180) delta -= 360;
+                        else if (delta < -180) delta += 360;
+                        angle += delta;
                         heading.style.transform = 'rotate(' + angle + 'deg)';
                         accumDx = 0; accumDy = 0;
                     }
