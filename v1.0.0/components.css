@@ -453,7 +453,7 @@ html.harith-cursor-active [contenteditable=''] {
 
 .harith-cursor {
   position: fixed; top: 0; left: 0; z-index: var(--z-cursor);
-  width: 26px; height: 26px; margin: -13px 0 0 -13px;
+  width: 78px; height: 78px; margin: -39px 0 0 -39px;
   pointer-events: none; opacity: 0;
   transition: opacity var(--duration-fast) var(--easing);
 }
@@ -466,11 +466,12 @@ html.harith-cursor-active [contenteditable=''] {
 }
 .harith-cursor__heading svg { display: block; width: 100%; height: 100%; }
 
-/* The mark itself: a dark heading arrow with a light halo in light mode,
-   flipped in dark mode — using --text/--surface-strong exactly as every
-   other themed surface does, so it always reads against the page. */
+/* The mark itself: the HK mark's own accent — deep slate-teal in light
+   mode, its pale inverse in dark mode — with a halo of --surface-strong for
+   contrast against whatever it's flying over. Same --accent every other
+   accented surface uses, not a color invented for this. */
 .harith-cursor__heading path {
-  fill: var(--text);
+  fill: var(--accent);
   stroke: var(--surface-strong);
   stroke-width: 1.5px;
   stroke-linejoin: round;

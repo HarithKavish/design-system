@@ -536,9 +536,30 @@
         const TEXT_TARGETS = 'input[type="text"], input[type="email"], input[type="password"], ' +
             'input[type="search"], input[type="tel"], input[type="url"], input[type="number"], ' +
             'input:not([type]), textarea, [contenteditable="true"], [contenteditable=""]';
-        const TURN_THRESHOLD = 4; // px moved before the heading updates, so it doesn't flicker while nearly still
+
+        /* A heading straight off two raw points is noisy: a couple of
+           trembly, sub-pixel-ish steps in slightly different directions
+           swing the angle wildly even though the pointer barely moved.
+
+           An earlier version smoothed the per-event delta with an EMA and
+           gated on ITS magnitude — but an EMA started from 0 only ever
+           approaches a constant input asymptotically, never reaching or
+           exceeding it. Any sustained movement whose per-event delta sat
+           between the noise floor and that gate would smooth toward a
+           value just under the gate forever, freezing the heading no
+           matter how long the motion continued.
+
+           Accumulating the net displacement VECTOR since the last update,
+           and resetting it only once it crosses the gate, has neither
+           problem: real, sustained movement keeps adding to the same
+           direction and is guaranteed to cross the gate eventually (no
+           asymptote to stall against), while back-and-forth jitter mostly
+           cancels itself in the sum instead of nudging the angle. */
+        const NOISE_FLOOR = 1.5;           // px per event below which a delta is ignored outright
+        const ANGLE_UPDATE_DISTANCE = 8;   // net accumulated px before the heading updates (and resets)
         let angle = 0;
-        let lastTurnX = null, lastTurnY = null;
+        let rawX = null, rawY = null;
+        let accumDx = 0, accumDy = 0;
         let pendingX = 0, pendingY = 0, frame = null;
 
         function applyFrame() {
@@ -550,16 +571,18 @@
             pendingX = e.clientX; pendingY = e.clientY;
             if (!frame) frame = requestAnimationFrame(applyFrame);
 
-            if (lastTurnX !== null) {
-                const dx = e.clientX - lastTurnX, dy = e.clientY - lastTurnY;
-                if (Math.sqrt(dx * dx + dy * dy) >= TURN_THRESHOLD) {
-                    angle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
-                    heading.style.transform = 'rotate(' + angle + 'deg)';
-                    lastTurnX = e.clientX; lastTurnY = e.clientY;
+            if (rawX !== null) {
+                const dx = e.clientX - rawX, dy = e.clientY - rawY;
+                if (Math.sqrt(dx * dx + dy * dy) >= NOISE_FLOOR) {
+                    accumDx += dx; accumDy += dy;
+                    if (Math.sqrt(accumDx * accumDx + accumDy * accumDy) >= ANGLE_UPDATE_DISTANCE) {
+                        angle = Math.atan2(accumDy, accumDx) * 180 / Math.PI + 90;
+                        heading.style.transform = 'rotate(' + angle + 'deg)';
+                        accumDx = 0; accumDy = 0;
+                    }
                 }
-            } else {
-                lastTurnX = e.clientX; lastTurnY = e.clientY;
             }
+            rawX = e.clientX; rawY = e.clientY;
 
             el.classList.add('is-visible');
             el.classList.toggle('is-hidden-over-text', !!(e.target && e.target.closest && e.target.closest(TEXT_TARGETS)));
@@ -569,7 +592,8 @@
             el.classList.remove('is-visible');
             // Otherwise the next move after a re-entry elsewhere computes a
             // heading from a stale pre-leave position.
-            lastTurnX = null; lastTurnY = null;
+            rawX = null; rawY = null;
+            accumDx = 0; accumDy = 0;
         }
 
         document.documentElement.classList.add('harith-cursor-active');
