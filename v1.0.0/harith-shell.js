@@ -557,6 +557,15 @@
            cancels itself in the sum instead of nudging the angle. */
         const NOISE_FLOOR = 1.5;           // px per event below which a delta is ignored outright
         const ANGLE_UPDATE_DISTANCE = 8;   // net accumulated px before the heading updates (and resets)
+        /* The glyph spins around its own center (a compass needle on a pin
+           through its middle), not around its tip — but the tip is still
+           the hotspot, so the BOX has to shift opposite the glyph's own
+           rotation to keep the tip glued to the pointer. This is the
+           tip's offset from the box's center when unrotated (pointing
+           up): box is 78px, viewBox is 24, so scale is 78/24; the tip
+           sits at viewBox y=1.5 while the center is at y=12, i.e.
+           (12 - 1.5) * (78/24) px above center. */
+        const TIP_OFFSET = (12 - 1.5) * (78 / 24);
         let angle = 0;
         let rawX = null, rawY = null;
         let accumDx = 0, accumDy = 0;
@@ -564,7 +573,12 @@
 
         function applyFrame() {
             frame = null;
-            el.style.transform = 'translate3d(' + pendingX + 'px,' + pendingY + 'px,0)';
+            const rad = angle * Math.PI / 180;
+            // The box's own center, positioned so that after the glyph
+            // rotates around it, the tip lands exactly on the pointer.
+            const cx = pendingX - TIP_OFFSET * Math.sin(rad);
+            const cy = pendingY + TIP_OFFSET * Math.cos(rad);
+            el.style.transform = 'translate3d(' + cx + 'px,' + cy + 'px,0)';
         }
 
         function onMove(e) {
