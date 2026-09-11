@@ -451,9 +451,16 @@ html.harith-cursor-active [contenteditable=''] {
   cursor: text;
 }
 
+/* A real pointer's hotspot is its tip, not its center — clicking happens
+   where the tip is, so the tip is what tracks the mouse position. The glyph
+   (viewBox 0 0 24 24) has its tip at (12, 1.5): horizontally centered, but
+   only 6.25% (1.5/24) down from the top, not at the vertical middle. The box
+   is offset so that exact point — not its center — lands on the pointer,
+   and the heading rotates around that same point (below) so the tip stays
+   put while the tail swings behind it, like a pin through a compass needle. */
 .harith-cursor {
   position: fixed; top: 0; left: 0; z-index: var(--z-cursor);
-  width: 78px; height: 78px; margin: -39px 0 0 -39px;
+  width: 78px; height: 78px; margin: -4.875px 0 0 -39px;
   pointer-events: none; opacity: 0;
   transition: opacity var(--duration-fast) var(--easing);
 }
@@ -462,6 +469,7 @@ html.harith-cursor-active [contenteditable=''] {
 
 .harith-cursor__heading {
   width: 100%; height: 100%;
+  transform-origin: 50% 6.25%;
   transition: transform var(--duration-fast) linear;
 }
 .harith-cursor__heading svg { display: block; width: 100%; height: 100%; }
