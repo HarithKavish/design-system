@@ -566,51 +566,69 @@
            sits at viewBox y=1.5 while the center is at y=12, i.e.
            (12 - 1.5) * (78/24) px above center. */
         const TIP_OFFSET = (12 - 1.5) * (78 / 24);
-        let angle = 0;
+        const TURN_EASE = 0.4; // per-frame convergence toward targetAngle; ~ the old 90ms CSS ease
+
+        /* `angle` is what's actually rendered this frame; `targetAngle` is
+           where the heading is turning toward. The translate that keeps the
+           tip glued to the pointer is an exact function of whichever angle
+           is currently on screen — so both the rotation AND the
+           compensating translate are written from the SAME `angle` value,
+           in the SAME frame, every frame. An earlier version let a CSS
+           transition ease the rotation while the translate snapped
+           straight to the angle it was easing toward: for the ~90ms of
+           every turn, the box was already positioned for an angle the
+           glyph hadn't visually reached yet, so the tip swung away from
+           the pointer instead of staying on it — the opposite of the
+           point. Interpolating `angle` in JS and deriving both transforms
+           from it here removes the CSS transition from the equation
+           entirely, so there's nothing left to fall out of sync with. */
+        let angle = 0, targetAngle = 0;
         let rawX = null, rawY = null;
         let accumDx = 0, accumDy = 0;
-        let pendingX = 0, pendingY = 0, frame = null;
+        let pendingX = 0, pendingY = 0;
 
-        function applyFrame() {
-            frame = null;
+        function frame() {
+            const diff = targetAngle - angle;
+            angle = Math.abs(diff) > 0.05 ? angle + diff * TURN_EASE : targetAngle;
+
             const rad = angle * Math.PI / 180;
             // The box's own center, positioned so that after the glyph
             // rotates around it, the tip lands exactly on the pointer.
             const cx = pendingX - TIP_OFFSET * Math.sin(rad);
             const cy = pendingY + TIP_OFFSET * Math.cos(rad);
             el.style.transform = 'translate3d(' + cx + 'px,' + cy + 'px,0)';
+            heading.style.transform = 'rotate(' + angle + 'deg)';
+
+            requestAnimationFrame(frame);
         }
 
         function onMove(e) {
             pendingX = e.clientX; pendingY = e.clientY;
-            if (!frame) frame = requestAnimationFrame(applyFrame);
 
             if (rawX !== null) {
                 const dx = e.clientX - rawX, dy = e.clientY - rawY;
                 if (Math.sqrt(dx * dx + dy * dy) >= NOISE_FLOOR) {
                     accumDx += dx; accumDy += dy;
                     if (Math.sqrt(accumDx * accumDx + accumDy * accumDy) >= ANGLE_UPDATE_DISTANCE) {
-                        /* atan2 wraps at +-180deg, but `angle` drives a
-                           CSS transition — setting it straight to atan2's
-                           output makes the transition animate the raw
-                           numeric jump (e.g. 178deg -> -179deg is a 357deg
-                           swing to the browser, even though the true turn
-                           is 3deg the other way), which is exactly the
-                           "spins like crazy once a lap" bug moving in
-                           circles surfaces. Instead, move `angle` by only
-                           the shortest signed delta from where it already
-                           is, letting it accumulate past +-360deg rather
-                           than ever snapping back into +-180deg. */
+                        /* atan2 wraps at +-180deg. Moving `targetAngle` by
+                           only the shortest signed delta from where it
+                           already is — rather than snapping it straight to
+                           atan2's output — lets it accumulate past
+                           +-360deg instead of ever jumping back into
+                           +-180deg, which is what caused the "spins like
+                           crazy once a lap" bug moving in circles surfaced:
+                           a heading of e.g. 178deg reading as -179deg next
+                           is a 357deg jump in the raw numbers even though
+                           the true turn is 3deg the other way. */
                         const target = Math.atan2(accumDy, accumDx) * 180 / Math.PI + 90;
                         // JS % keeps the dividend's sign, so this isn't a true
                         // mod — normalize into (-180, 180] explicitly rather
                         // than assume a single +540 offset lands it there,
-                        // which only holds once `angle` has stayed small.
-                        let delta = (target - angle) % 360;
+                        // which only holds once `targetAngle` has stayed small.
+                        let delta = (target - targetAngle) % 360;
                         if (delta > 180) delta -= 360;
                         else if (delta < -180) delta += 360;
-                        angle += delta;
-                        heading.style.transform = 'rotate(' + angle + 'deg)';
+                        targetAngle += delta;
                         accumDx = 0; accumDy = 0;
                     }
                 }
@@ -633,6 +651,7 @@
         addEventListener('mousemove', onMove, { passive: true });
         document.addEventListener('mouseleave', hide);
         addEventListener('blur', hide);
+        requestAnimationFrame(frame);
     }
 
     onReady(initCustomCursor);

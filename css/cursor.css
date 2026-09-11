@@ -50,9 +50,15 @@ html.harith-cursor-active [contenteditable=''] {
 .harith-cursor.is-visible { opacity: 1; }
 .harith-cursor.is-hidden-over-text { opacity: 0; }
 
+/* No transition here: harith-shell.js interpolates the rotation itself,
+   frame by frame, and derives the box's compensating translate from that
+   SAME per-frame angle so the tip stays glued to the pointer throughout a
+   turn. A CSS transition on top of that would fight the per-frame writes —
+   and was exactly the bug: rotation eased on its own timeline while the
+   translate snapped straight to the angle it was still easing toward,
+   pulling the tip off the pointer for the length of every transition. */
 .harith-cursor__heading {
   width: 100%; height: 100%;
-  transition: transform var(--duration-fast) linear;
 }
 .harith-cursor__heading svg { display: block; width: 100%; height: 100%; }
 
