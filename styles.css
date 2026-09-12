@@ -11,6 +11,7 @@
 @import url('tokens/layers.css');
 @import url('base.css');
 @import url('css/shell.css');
+@import url('css/sidebar.css');
 @import url('css/core.css');
 @import url('css/reading.css');
 @import url('css/messaging.css');
