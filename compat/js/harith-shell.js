@@ -314,6 +314,24 @@
             });
         }
 
+        /**
+         * The elements inside <template class="site-settings-items"> are
+         * inert until this moment — they don't exist in the live DOM at
+         * all until the dropdown that just rendered cloned the template's
+         * content into it. A page's own script querying them at its own
+         * top level (the natural way to write it, and how Search's did
+         * before this contract existed) runs before that, and gets null.
+         * Firing this — bubbling, so a page can listen on `document` — lets
+         * a page defer that wiring to exactly when it will actually find
+         * its elements, and re-wire on every firing, since the dropdown's
+         * innerHTML — elements included — is rebuilt on each render (an
+         * auth change, e.g.), not reused.
+         */
+        announceSiteSettingsReady() {
+            if (!this._siteSettingsHTML) return;
+            this.dispatchEvent(new CustomEvent('harith-site-settings-ready', { bubbles: true }));
+        }
+
         initGoogleAuth() {
             const container = this.querySelector('#googleSignInButton');
             if (!container) return;
@@ -322,6 +340,7 @@
             if (shared) {
                 this.renderUserProfile(container, shared);
                 this.dispatchEvent(new CustomEvent('harith-auth-change', { detail: { user: shared }, bubbles: true }));
+                this.announceSiteSettingsReady();
                 return;
             }
 
@@ -332,6 +351,7 @@
                A page with nothing to contribute keeps today's plain link. */
             if (this._siteSettingsHTML) {
                 this.renderSignedOutMenu(container);
+                this.announceSiteSettingsReady();
                 return;
             }
             this.renderSignInButton(container);

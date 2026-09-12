@@ -82,7 +82,15 @@ instead of building a standalone gear-icon menu. On `<harith-header>`:
   CSS, so it reads as native to the dropdown.
 - The page's own script keeps wiring its controls by ID exactly as before
   (`document.getElementById('background-button')`, etc.) — moving *where*
-  an element lives doesn't break an ID-based listener.
+  an element lives doesn't break an ID-based listener. It **does** break
+  wiring that runs at the script's top level, though: the template's
+  content is inert and doesn't exist in the live DOM until the dropdown
+  renders, which happens asynchronously (after `DOMContentLoaded`, and
+  again on every auth change). Listen for `harith-site-settings-ready`
+  (bubbles, fired on `document`) and do the querying/wiring in that
+  handler — it fires every time the dropdown (and therefore the settings
+  elements — the container's `innerHTML` is rebuilt, not patched) is
+  re-rendered, so re-query rather than caching elements at load time.
 
 **The dropdown exists whether or not the visitor is signed in.** Signed
 in, it's the full menu: identity header, a "General settings" section
