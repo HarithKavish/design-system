@@ -101,7 +101,7 @@
     class HarithHeader extends HTMLElement {
         static get observedAttributes() {
             return ['site-title', 'site-tagline', 'nav-links', 'brand-href',
-                    'brand-mark', 'reading-progress', 'sign-in-url'];
+                    'brand-mark', 'reading-progress', 'sign-in-url', 'site-settings-label'];
         }
 
         connectedCallback() {
@@ -145,6 +145,7 @@
         /** Overridable so a preview deployment can point at its own instance. */
         get signInUrl() { return this.getAttribute('sign-in-url') || SIGN_IN_URL; }
         get readingProgress() { return this.hasAttribute('reading-progress'); }
+        get siteSettingsLabel() { return this.getAttribute('site-settings-label') || 'Site'; }
 
         render() {
             const navMarkup = this.navLinks.map(link => link.action
@@ -236,7 +237,34 @@
 
         /* Move page-authored nodes into the header's actions slot. Safe to call
            repeatedly: our own rendered header is excluded by identity. */
+        /**
+         * A page that wants its own settings surfaced in the shared profile
+         * dropdown authors a <template class="site-settings-items"> as a
+         * child of <harith-header>, alongside a site-settings-label
+         * attribute naming the section ("Search" -> "Search settings").
+         * <template> content is inert and never renders on its own, so it
+         * is safe to leave the (now-empty) template tag wherever
+         * adoptAuthored's generic sweep puts it — only its captured
+         * innerHTML is used, once, the first time it is found. Children
+         * are not parsed yet on the FIRST call (see the connectedCallback
+         * comment above), so this is checked again on every later call
+         * adoptAuthored already gets, rather than assumed to be a
+         * one-shot success.
+         */
+        captureSiteSettings() {
+            if (this._siteSettingsHTML) return;
+            const tpl = this.querySelector('template.site-settings-items');
+            if (!tpl) return;
+            this._siteSettingsHTML = tpl.innerHTML;
+            this._siteSettingsLabel = this.siteSettingsLabel;
+            // The menu may already have been built without knowing this
+            // existed (e.g. render() ran before children were parsed) --
+            // rebuild it now that it's known, harmless if unchanged.
+            if (this._rendered) this.initGoogleAuth();
+        }
+
         adoptAuthored() {
+            this.captureSiteSettings();
             const slot = this.querySelector('.site-header__slot');
             if (!slot) return;
             if (this._authored && this._authored.childNodes.length) {
@@ -286,6 +314,24 @@
             });
         }
 
+        /**
+         * The elements inside <template class="site-settings-items"> are
+         * inert until this moment — they don't exist in the live DOM at
+         * all until the dropdown that just rendered cloned the template's
+         * content into it. A page's own script querying them at its own
+         * top level (the natural way to write it, and how Search's did
+         * before this contract existed) runs before that, and gets null.
+         * Firing this — bubbling, so a page can listen on `document` — lets
+         * a page defer that wiring to exactly when it will actually find
+         * its elements, and re-wire on every firing, since the dropdown's
+         * innerHTML — elements included — is rebuilt on each render (an
+         * auth change, e.g.), not reused.
+         */
+        announceSiteSettingsReady() {
+            if (!this._siteSettingsHTML) return;
+            this.dispatchEvent(new CustomEvent('harith-site-settings-ready', { bubbles: true }));
+        }
+
         initGoogleAuth() {
             const container = this.querySelector('#googleSignInButton');
             if (!container) return;
@@ -294,9 +340,20 @@
             if (shared) {
                 this.renderUserProfile(container, shared);
                 this.dispatchEvent(new CustomEvent('harith-auth-change', { detail: { user: shared }, bubbles: true }));
+                this.announceSiteSettingsReady();
                 return;
             }
 
+            /* Signed out: a page with its own settings still needs a place
+               to put them, so it gets the same dropdown shell with just a
+               settings section and a sign-in action — the account-bound
+               parts (name, General settings) have nothing to show yet.
+               A page with nothing to contribute keeps today's plain link. */
+            if (this._siteSettingsHTML) {
+                this.renderSignedOutMenu(container);
+                this.announceSiteSettingsReady();
+                return;
+            }
             this.renderSignInButton(container);
         }
 
@@ -319,6 +376,69 @@
                 '</a>';
         }
 
+        /** The site-settings section markup, shared by both the signed-in
+            and signed-out dropdowns — empty string when the page authored
+            none. */
+        siteSettingsSectionHTML() {
+            if (!this._siteSettingsHTML) return '';
+            return '<div class="user-dropdown-section">' +
+                '<span class="user-dropdown-section-title">' + esc(this._siteSettingsLabel) + ' settings</span>' +
+                this._siteSettingsHTML +
+            '</div>';
+        }
+
+        /** Wires a dropdown's open/close behavior: click the trigger to
+            toggle, click inside to stay open, click anywhere else to
+            close. Shared by the signed-in and signed-out menus so there is
+            one place that owns "how a header dropdown opens," not two
+            copies that can drift. */
+        wireDropdownToggle(trigger, dropdown) {
+            trigger.onclick = (e) => {
+                e.stopPropagation();
+                const open = !dropdown.classList.contains('show');
+                dropdown.classList.toggle('show', open);
+                trigger.setAttribute('aria-expanded', String(open));
+                trigger.classList.toggle('active', open);
+            };
+            dropdown.onclick = e => e.stopPropagation();
+
+            if (!this._globalClickListener) {
+                this._globalClickListener = () => {
+                    this.querySelectorAll('.user-dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
+                    this.querySelectorAll('[aria-haspopup="true"].active').forEach(t => {
+                        t.setAttribute('aria-expanded', 'false');
+                        t.classList.remove('active');
+                    });
+                };
+                document.addEventListener('click', this._globalClickListener);
+            }
+        }
+
+        /** Signed out, but the page has settings of its own: a small gear
+            trigger opens a dropdown with just that section plus sign-in —
+            there is no name/avatar or General settings to show yet. */
+        renderSignedOutMenu(container) {
+            const dropdownId = 'siteSettingsDropdown';
+            const signInHref = this.signInUrl + '?next=' + encodeURIComponent(location.href);
+
+            container.innerHTML =
+                '<button type="button" class="settings-trigger" aria-label="Open settings" ' +
+                    'aria-haspopup="true" aria-expanded="false" aria-controls="' + dropdownId + '">' +
+                    '<span aria-hidden="true">&#9881;</span>' +
+                '</button>' +
+                '<div id="' + dropdownId + '" class="user-dropdown-menu">' +
+                    this.siteSettingsSectionHTML() +
+                    '<div class="user-dropdown-section">' +
+                        '<a class="user-dropdown-action" href="' + esc(signInHref) + '">Sign in</a>' +
+                    '</div>' +
+                '</div>';
+
+            this.wireDropdownToggle(
+                container.querySelector('.settings-trigger'),
+                container.querySelector('.user-dropdown-menu')
+            );
+        }
+
         renderUserProfile(container, user) {
             const dropdownId = 'userProfileDropdown';
             this._gsiPending = false;
@@ -331,7 +451,8 @@
                 : '<span class="signed-in-button__avatar signed-in-button__avatar--empty" aria-hidden="true">' + PERSON_MARK + '</span>';
 
             container.innerHTML =
-                '<button type="button" class="signed-in-button" aria-label="Signed in as ' + esc(user.name) + '. Open account menu." aria-expanded="false" aria-controls="' + dropdownId + '">' +
+                '<button type="button" class="signed-in-button" aria-label="Signed in as ' + esc(user.name) + '. Open account menu." ' +
+                    'aria-haspopup="true" aria-expanded="false" aria-controls="' + dropdownId + '">' +
                     avatar +
                 '</button>' +
                 '<div id="' + dropdownId + '" class="user-dropdown-menu">' +
@@ -339,36 +460,20 @@
                         '<span class="user-dropdown-name">' + esc(user.name) + '</span>' +
                         (user.email ? '<span class="user-dropdown-email">' + esc(user.email) + '</span>' : '') +
                     '</div>' +
-                    '<button type="button" class="user-dropdown-action" id="logoutBtn">Sign out</button>' +
+                    '<div class="user-dropdown-section">' +
+                        '<span class="user-dropdown-section-title">General settings</span>' +
+                        '<a class="user-dropdown-action" href="https://account.harithkavish.com/settings">Account settings</a>' +
+                        '<button type="button" class="user-dropdown-action" id="logoutBtn">Sign out</button>' +
+                    '</div>' +
+                    this.siteSettingsSectionHTML() +
                 '</div>';
 
-            const btn = container.querySelector('.signed-in-button');
-            const dropdown = container.querySelector('.user-dropdown-menu');
-            const logout = container.querySelector('#logoutBtn');
+            this.wireDropdownToggle(
+                container.querySelector('.signed-in-button'),
+                container.querySelector('.user-dropdown-menu')
+            );
 
-            btn.onclick = (e) => {
-                e.stopPropagation();
-                const open = !dropdown.classList.contains('show');
-                dropdown.classList.toggle('show', open);
-                btn.setAttribute('aria-expanded', String(open));
-                btn.classList.toggle('active', open);
-            };
-            dropdown.onclick = e => e.stopPropagation();
-
-            if (!this._globalClickListener) {
-                this._globalClickListener = () => {
-                    const menu = this.querySelector('.user-dropdown-menu');
-                    const trigger = this.querySelector('.signed-in-button');
-                    if (menu) menu.classList.remove('show');
-                    if (trigger) {
-                        trigger.setAttribute('aria-expanded', 'false');
-                        trigger.classList.remove('active');
-                    }
-                };
-                document.addEventListener('click', this._globalClickListener);
-            }
-
-            logout.onclick = () => {
+            container.querySelector('#logoutBtn').onclick = () => {
                 /* Signing out happens at the identity service, not here.
                    Clearing the shared value alone only made the reader *look*
                    signed out — the session survived, and going back to the

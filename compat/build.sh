@@ -52,7 +52,7 @@ banner() {
 # --- components.css : the whole current surface + legacy shell aliases ------
 {
   banner "Harith Design System — v1.0.0 compatibility components." "css/*.css, compat/legacy-shell.css"
-  for f in shell core reading messaging cursor; do
+  for f in shell sidebar core reading messaging cursor; do
     cat "$root/css/$f.css"; echo
   done
   cat "$root/compat/legacy-shell.css"

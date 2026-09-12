@@ -126,5 +126,44 @@
 }
 .user-dropdown-action:hover { background: var(--surface-soft); color: var(--text); }
 
+/* A dropdown can hold more than one concern now — General settings, plus a
+   per-site section a page contributes via <template class="site-settings-items">
+   (see harith-shell.js). Sections stack with a rule between them; each gets
+   a small caps label instead of the bordered .user-dropdown-header treatment,
+   which is reserved for the identity block. */
+.user-dropdown-section {
+  padding: var(--space-sm) 0;
+  border-top: var(--border-hairline) solid var(--border);
+}
+.user-dropdown-section:first-child { border-top: none; }
+.user-dropdown-section-title {
+  display: block; padding: 0 var(--space-md) var(--space-2xs);
+  font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold);
+  color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em;
+}
+/* A labeled row for a non-button setting, e.g. a checkbox switch — same
+   padding rhythm as .user-dropdown-action so it lines up with the buttons
+   around it. */
+.user-dropdown-row {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-base); color: var(--muted); cursor: pointer;
+}
+.user-dropdown-row input[type='checkbox'] {
+  width: 2.4rem; height: 1.4rem; margin: 0; accent-color: var(--accent);
+}
+
+/* The signed-out equivalent of the theme toggle: same pill/border/shadow
+   footprint, so a page's settings gear reads as a sibling of the other
+   header icon buttons rather than a one-off. */
+.settings-trigger {
+  border-radius: var(--radius-pill); border: var(--border-hairline) solid var(--border);
+  background: var(--surface); color: var(--text); box-shadow: var(--shadow);
+  padding: 0.58rem 0.9rem; font: inherit; font-size: 0.9rem; cursor: pointer;
+  position: relative;
+}
+.settings-trigger:hover { transform: translateY(var(--lift-hover)); }
+.settings-trigger.active { border-color: var(--accent); }
+
 /* .subtitle — the single v1.0.0 component class consumed directly by a site */
 .subtitle { margin: 0; color: var(--muted); font-size: var(--font-size-base); }
