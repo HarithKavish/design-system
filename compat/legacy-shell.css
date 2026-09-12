@@ -149,6 +149,9 @@
   width: 100%; padding: var(--space-sm) var(--space-md);
   font-size: var(--font-size-base); color: var(--muted); cursor: pointer;
 }
+.user-dropdown-row input[type='checkbox'] {
+  width: 2.4rem; height: 1.4rem; margin: 0; accent-color: var(--accent);
+}
 
 /* The signed-out equivalent of the theme toggle: same pill/border/shadow
    footprint, so a page's settings gear reads as a sibling of the other
