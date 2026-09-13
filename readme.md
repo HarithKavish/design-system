@@ -269,7 +269,7 @@ retired. Its consumers are served from this repository instead, at the same
 filenames, from GitHub Pages:
 
 `https://harithkavish.com/design-system/v1.0.0/{tokens,base,components,utils}.css`
-and `.../{theme-toggle,harith-shell,widget-loader}.js`
+and `.../{theme-toggle,harith-shell,widget-loader,analytics}.js`
 
 `v1.0.0/` is **generated — do not edit it by hand.** Run `bash compat/build.sh`
 after changing any token, `css/` file or `compat/` source.
@@ -280,7 +280,7 @@ after changing any token, `css/` file or `compat/` source.
 | `compat/legacy-vars.css` | Redefines all 95 v1.0.0 custom properties in terms of current tokens |
 | `compat/legacy-shell.css` | Aliases the old `.shared-*` shell classes onto current `.site-*` styling; adds the Google button and dropdown |
 | `compat/legacy-utils.css` | The v1.0.0 utilities, unchanged — they reference only legacy names, which the shim supplies |
-| `compat/js/*.js` | The shell web components and theme toggle |
+| `compat/js/*.js` | The shell web components, theme toggle, and analytics loader |
 
 ### `harith-store.js` — shared ecosystem state
 
@@ -314,6 +314,32 @@ Every subdomain and every script on them can read it, and it rides along on
 every request to the domain. It is display state, never proof: authorisation is
 decided on a server. Values above ~1.5KB stay in `localStorage` only and do not
 follow the reader, so keep them small.
+
+### `analytics.js` — per-surface Google Analytics + Cloudflare Web Analytics
+
+Traffic is not shared state the way theme or identity are: each surface gets
+its **own** GA4 property and its **own** Cloudflare Web Analytics site, so
+`analytics.js` reads two per-surface values from `<meta>` tags rather than one
+ecosystem-wide constant:
+
+```html
+<meta name="harith-ga-id" content="G-XXXXXXX">
+<meta name="harith-cf-token" content="<32-char beacon token>">
+<script src="https://harithkavish.com/design-system/v1.0.0/analytics.js?v=..."></script>
+```
+
+Either tag may be absent or empty; that half of analytics simply does not
+load. This is why every consuming surface can add the meta tags and the
+script tag now, before its GA4 property or Cloudflare Web Analytics site
+exists, and fill in the two values later without another deploy of this file.
+
+> Creating the GA4 property and the Cloudflare Web Analytics site themselves
+> are both dashboard steps — analogous to registering an *Authorized
+> JavaScript origin* for `google-client-id` below, neither has a scripted
+> path from an agent's current credentials (Cloudflare's API token here
+> covers Workers/Pages/DNS-read, not Analytics; GA4's Admin API needs its own
+> OAuth consent). Do them in each console, then drop the resulting ID/token
+> into that surface's two meta tags.
 
 ### Identity across the ecosystem
 
